@@ -415,16 +415,34 @@ const save = async () => {
 };
 
 const uploadImage = async (field: AdminField, file: File) => {
-  if (!$supabase || !field.bucket) return;
+  const { upload, validateFile } = useCloudinary();
   saving.value = true;
   errorMessage.value = '';
+  
   try {
-    const fileName = `${Date.now()}-${file.name.toLowerCase().replace(/[^a-z0-9._-]+/g, '-')}`;
-    const { data, error } = await $supabase.storage.from(field.bucket).upload(fileName, file, { cacheControl: '3600', upsert: true });
-    if (error) throw error;
-    const { data: publicUrl } = $supabase.storage.from(field.bucket).getPublicUrl(data.path);
-    form.value[field.key] = publicUrl.publicUrl;
-    toast.success(`Gambar berhasil diunggah`);
+    // Validate file
+    const validation = validateFile(file, {
+      maxSize: 5,
+      allowedTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+    });
+    
+    if (!validation.valid) {
+      throw new Error(validation.error || 'File validation failed');
+    }
+    
+    // Upload to Cloudinary with folder from field.bucket
+    const result = await upload(file, {
+      folder: field.bucket || 'uploads',
+    });
+    
+    if (!result) {
+      throw new Error('Upload to Cloudinary failed');
+    }
+    
+    // Set the image URL in form
+    form.value[field.key] = result.url;
+    toast.success(`Gambar berhasil diunggah ke Cloudinary`);
+    
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Gagal mengunggah gambar.';
     toast.error(errorMessage.value);
