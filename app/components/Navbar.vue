@@ -1,12 +1,12 @@
 <template>
   <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
       <!-- Logo -->
-      <NuxtLink to="/" class="flex items-center gap-3">
+      <NuxtLink to="/" class="flex items-center">
         <img 
           :src="logoUrl" 
           alt="CV Banjar Indah Logo" 
-          class="h-12 w-auto object-contain"
+          class="h-14 md:h-16 w-auto max-w-[200px] object-contain"
         />
       </NuxtLink>
 
