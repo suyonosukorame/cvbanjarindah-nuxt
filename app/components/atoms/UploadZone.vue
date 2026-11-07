@@ -7,6 +7,7 @@
         : 'border-slate-300 hover:border-primary/50 hover:bg-slate-50',
       disabled ? 'opacity-50 cursor-not-allowed' : ''
     ]"
+    @dragenter.prevent="handleDragEnter"
     @dragover.prevent="handleDragOver"
     @dragleave.prevent="handleDragLeave"
     @drop.prevent="handleDrop"
@@ -93,17 +94,35 @@ function triggerFileInput() {
   fileInputRef.value?.click()
 }
 
+function handleDragEnter(event: DragEvent) {
+  if (props.disabled) return
+  event.stopPropagation()
+  isDragging.value = true
+}
+
 function handleDragOver(event: DragEvent) {
   if (props.disabled) return
+  event.stopPropagation()
   isDragging.value = true
 }
 
 function handleDragLeave(event: DragEvent) {
-  isDragging.value = false
+  if (props.disabled) return
+  event.stopPropagation()
+  
+  // Only set to false if leaving the component entirely
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  const x = event.clientX
+  const y = event.clientY
+  
+  if (x <= rect.left || x >= rect.right || y <= rect.top || y >= rect.bottom) {
+    isDragging.value = false
+  }
 }
 
 function handleDrop(event: DragEvent) {
   if (props.disabled) return
+  event.stopPropagation()
   isDragging.value = false
   
   const files = Array.from(event.dataTransfer?.files || [])
