@@ -49,4 +49,5 @@ temp/
 tmp/
 
 # Documentation (local only)
-docs/
+docs/*
+!docs/CLOUDFLARE_DEPLOYMENT.md
