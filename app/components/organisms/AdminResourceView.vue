@@ -355,7 +355,15 @@ const save = async () => {
     for (const field of resource.value.fields) {
       let value = form.value[field.key];
       if (field.type === 'list') value = String(value ?? '').split('\n').map((item: string) => item.trim()).filter(Boolean);
-      if (field.type === 'number' && (value === '' || value === undefined)) value = null;
+      if (field.type === 'number') {
+        // Handle number/decimal fields - convert to proper number or null
+        if (value === '' || value === undefined || value === null) {
+          value = null;
+        } else {
+          value = parseFloat(String(value));
+          if (isNaN(value)) value = null;
+        }
+      }
       if (field.type === 'boolean') value = value === true || value === 'true';
       payload[field.key] = value;
     }
@@ -367,7 +375,16 @@ const save = async () => {
       if (error) throw error;
       toast.success(`${resource.value.label} berhasil ditambahkan`);
     } else {
-      const updatePayload = props.resourceKey === 'inquiries' ? { status: payload.status } : payload;
+      // For update, only include fields that are defined in the resource config
+      const updatePayload: Record<string, unknown> = {};
+      for (const field of resource.value.fields) {
+        if (props.resourceKey === 'inquiries' && field.key !== 'status') {
+          // Skip non-status fields for inquiries (read-only)
+          continue;
+        }
+        updatePayload[field.key] = payload[field.key];
+      }
+      
       const { error } = await $supabase.from(resource.value.table).update(updatePayload).eq('id', recordId.value);
       if (error) throw error;
       toast.success(`${resource.value.label} berhasil diperbarui`);
