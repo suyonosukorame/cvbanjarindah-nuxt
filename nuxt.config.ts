@@ -91,6 +91,8 @@ export default defineNuxtConfig({
       supabaseEndpoint: process.env.SUPABASE_URL || process.env.NUXT_PUBLIC_SUPABASE_URL,
       supabasePublishableKey: process.env.SUPABASE_KEY || process.env.NUXT_PUBLIC_SUPABASE_ANON_KEY,
       geminiApiKey: process.env.NUXT_PUBLIC_GEMINI_API_KEY,
+      cloudinaryCloudName: process.env.NUXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+      cloudinaryUploadPreset: process.env.NUXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET,
       appName: 'CV Banjar Indah',
       appUrl: process.env.NUXT_PUBLIC_APP_URL || 'http://localhost:3000',
     },
