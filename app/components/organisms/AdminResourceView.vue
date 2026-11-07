@@ -4,60 +4,250 @@
       Resource admin tidak dikenal.
     </div>
     <template v-else>
+      <!-- Page Header -->
       <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <p class="text-sm text-slate-500">Konten website</p>
-          <h2 class="mt-1 text-2xl font-bold text-slate-900">{{ isCreate ? `Tambah ${resource.label.toLowerCase()}` : isEditing ? `Edit ${resource.label.toLowerCase()}` : resource.label }}</h2>
-          <p v-if="!isFormView" class="mt-1 text-sm text-slate-500">{{ filteredRows.length }} data</p>
+          <h2 class="mt-1 text-2xl font-bold text-slate-900">
+            {{ 
+              isCreate 
+                ? `Tambah ${resource.label.toLowerCase()}` 
+                : isEditing 
+                  ? `Edit ${resource.label.toLowerCase()}` 
+                  : resource.label 
+            }}
+          </h2>
+          <p v-if="!isFormView" class="mt-1 text-sm text-slate-500">
+            {{ filteredRows.length }} data
+          </p>
         </div>
+
+        <!-- Search & Add Button (List View) -->
         <div v-if="!isFormView && resource.allowCreate !== false" class="flex gap-2">
-          <input v-model="search" type="search" :placeholder="`Cari ${resource.label.toLowerCase()}...`" class="h-10 min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64">
-          <NuxtLink :to="`${basePath}/create`" class="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-orange-600"><span class="material-symbols-outlined text-lg">add</span><span class="hidden sm:inline">Tambah</span></NuxtLink>
+          <input 
+            v-model="search" 
+            type="search" 
+            :placeholder="`Cari ${resource.label.toLowerCase()}...`" 
+            class="h-10 min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
+          >
+          <NuxtLink 
+            :to="`${basePath}/create`" 
+            class="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-white hover:bg-orange-600"
+          >
+            <span class="material-symbols-outlined text-lg">add</span>
+            <span class="hidden sm:inline">Tambah</span>
+          </NuxtLink>
         </div>
-        <input v-else-if="!isFormView" v-model="search" type="search" :placeholder="`Cari ${resource.label.toLowerCase()}...`" class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64">
+
+        <!-- Search Only (Form View) -->
+        <input 
+          v-else-if="!isFormView" 
+          v-model="search" 
+          type="search" 
+          :placeholder="`Cari ${resource.label.toLowerCase()}...`" 
+          class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
+        >
       </div>
 
-      <div v-if="errorMessage" role="alert" class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ errorMessage }}</div>
+      <!-- Error Message -->
+      <div 
+        v-if="errorMessage" 
+        role="alert" 
+        class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
+        {{ errorMessage }}
+      </div>
 
       <div v-if="isFormView" class="rounded-lg border border-slate-200 bg-white p-4 sm:p-6">
         <form class="space-y-6" @submit.prevent="save">
           <div class="grid gap-5 md:grid-cols-2">
-            <label v-for="field in resource.fields" :key="field.key" :class="['block space-y-2', field.type === 'textarea' || field.type === 'list' ? 'md:col-span-2' : '']">
-              <span class="text-sm font-semibold text-slate-700">{{ field.label }}<span v-if="field.required" class="ml-1 text-red-500">*</span></span>
-              <AtomsFileUpload v-if="field.type === 'image'" v-model="form[field.key]" :disabled="saving" @upload="uploadImage(field, $event)" @error="errorMessage = $event" />
-              <textarea v-else-if="field.type === 'textarea' || field.type === 'list'" v-model="form[field.key]" :rows="field.type === 'list' ? 5 : 4" :required="field.required" :readonly="isInquiryReadOnly(field.key)" :placeholder="field.type === 'list' ? 'Satu item per baris' : ''" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50" />
-              <select v-else-if="field.type === 'boolean' || field.type === 'select'" v-model="form[field.key]" :disabled="isInquiryReadOnly(field.key)" class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-slate-50">
-                <option v-if="field.type === 'boolean'" :value="true">Ya</option><option v-if="field.type === 'boolean'" :value="false">Tidak</option>
+            <label 
+              v-for="field in resource.fields" 
+              :key="field.key" 
+              :class="['block space-y-2', field.type === 'textarea' || field.type === 'list' ? 'md:col-span-2' : '']"
+            >
+              <span class="text-sm font-semibold text-slate-700">
+                {{ field.label }}
+                <span v-if="field.required" class="ml-1 text-red-500">*</span>
+              </span>
+
+              <!-- Image Upload -->
+              <AtomsFileUpload 
+                v-if="field.type === 'image'" 
+                v-model="form[field.key]" 
+                :disabled="saving" 
+                @upload="uploadImage(field, $event)" 
+                @error="errorMessage = $event" 
+              />
+
+              <!-- Textarea / List -->
+              <textarea 
+                v-else-if="field.type === 'textarea' || field.type === 'list'" 
+                v-model="form[field.key]" 
+                :rows="field.type === 'list' ? 5 : 4" 
+                :required="field.required" 
+                :readonly="isInquiryReadOnly(field.key)" 
+                :placeholder="field.type === 'list' ? 'Satu item per baris' : ''" 
+                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50"
+              />
+
+              <!-- Boolean / Select Dropdown -->
+              <select 
+                v-else-if="field.type === 'boolean' || field.type === 'select'" 
+                :value="field.type === 'boolean' ? (form[field.key] ? 'true' : 'false') : form[field.key]"
+                :disabled="isInquiryReadOnly(field.key)" 
+                class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-slate-50"
+                @change="field.type === 'boolean' ? (form[field.key] = ($event.target as HTMLSelectElement).value === 'true') : (form[field.key] = ($event.target as HTMLSelectElement).value)"
+              >
+                <option v-if="field.type === 'boolean'" value="true">Ya</option>
+                <option v-if="field.type === 'boolean'" value="false">Tidak</option>
                 <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</option>
               </select>
-              <AtomsCurrencyInput v-else-if="field.type === 'number' && (field.key.includes('price') || field.key.includes('harga') || field.key.includes('biaya'))" v-model="form[field.key]" :required="field.required" :disabled="saving || isInquiryReadOnly(field.key)" :placeholder="`0`" show-preview />
-              <input v-else-if="field.type !== 'image'" v-model="form[field.key]" :type="field.type === 'number' ? 'number' : field.type || 'text'" :min="field.key === 'rating' ? 1 : undefined" :max="field.key === 'rating' ? 5 : undefined" :required="field.required" :readonly="isInquiryReadOnly(field.key)" :step="field.type === 'number' ? 'any' : undefined" class="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50">
+
+              <!-- Currency Input -->
+              <AtomsCurrencyInput 
+                v-else-if="field.type === 'number' && (field.key.includes('price') || field.key.includes('harga') || field.key.includes('biaya'))" 
+                v-model="form[field.key]" 
+                :required="field.required" 
+                :disabled="saving || isInquiryReadOnly(field.key)" 
+                :placeholder="`0`" 
+                show-preview 
+              />
+
+              <!-- Text / Number Input -->
+              <input 
+                v-else-if="field.type !== 'image'" 
+                v-model="form[field.key]" 
+                :type="field.type === 'number' ? 'number' : field.type || 'text'" 
+                :min="field.key === 'rating' ? 1 : undefined" 
+                :max="field.key === 'rating' ? 5 : undefined" 
+                :required="field.required" 
+                :readonly="isInquiryReadOnly(field.key)" 
+                :step="field.type === 'number' ? 'any' : undefined" 
+                class="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50"
+              />
             </label>
           </div>
+
+          <!-- Form Actions -->
           <div class="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
-            <NuxtLink :to="basePath" class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">Kembali</NuxtLink>
-            <button type="submit" :disabled="saving" class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-60"><span v-if="saving" class="material-symbols-outlined animate-spin text-lg">progress_activity</span>{{ saving ? 'Menyimpan...' : 'Simpan' }}</button>
+            <NuxtLink 
+              :to="basePath" 
+              class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Kembali
+            </NuxtLink>
+            <button 
+              type="submit" 
+              :disabled="saving" 
+              class="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-white hover:bg-orange-600 disabled:opacity-60"
+            >
+              <span v-if="saving" class="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+              {{ saving ? 'Menyimpan...' : 'Simpan' }}
+            </button>
           </div>
         </form>
       </div>
 
       <div v-else class="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <div v-if="loading" class="flex h-48 items-center justify-center gap-3 text-sm text-slate-500"><span class="material-symbols-outlined animate-spin">progress_activity</span>Memuat data...</div>
-        <div v-else-if="!filteredRows.length" class="px-6 py-16 text-center"><span class="material-symbols-outlined text-4xl text-slate-300">inventory_2</span><h3 class="mt-3 font-bold text-slate-800">Belum ada data</h3><p class="mt-1 text-sm text-slate-500">Data {{ resource.label.toLowerCase() }} akan tampil di sini.</p></div>
+        <!-- Loading State -->
+        <div v-if="loading" class="flex h-48 items-center justify-center gap-3 text-sm text-slate-500">
+          <span class="material-symbols-outlined animate-spin">progress_activity</span>
+          Memuat data...
+        </div>
+
+        <!-- Empty State -->
+        <div v-else-if="!filteredRows.length" class="px-6 py-16 text-center">
+          <span class="material-symbols-outlined text-4xl text-slate-300">inventory_2</span>
+          <h3 class="mt-3 font-bold text-slate-800">Belum ada data</h3>
+          <p class="mt-1 text-sm text-slate-500">
+            Data {{ resource.label.toLowerCase() }} akan tampil di sini.
+          </p>
+        </div>
+
+        <!-- Data Table -->
         <div v-else class="overflow-x-auto">
           <table class="w-full min-w-[700px] text-left text-sm">
-            <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500"><tr><th v-for="field in visibleFields" :key="field.key" class="px-4 py-3 font-semibold">{{ field.label }}</th><th class="px-4 py-3 text-right font-semibold">Aksi</th></tr></thead>
+            <!-- Table Header -->
+            <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+              <tr>
+                <th 
+                  v-for="field in visibleFields" 
+                  :key="field.key" 
+                  class="px-4 py-3 font-semibold"
+                >
+                  {{ field.label }}
+                </th>
+                <th class="px-4 py-3 text-right font-semibold">Aksi</th>
+              </tr>
+            </thead>
+
+            <!-- Table Body -->
             <tbody class="divide-y divide-slate-100">
-              <tr v-for="row in pageRows" :key="String(row.id)" class="hover:bg-slate-50/70">
-                <td v-for="field in visibleFields" :key="field.key" class="max-w-64 px-4 py-3 text-slate-700"><span :class="field.type === 'boolean' ? (row[field.key] ? 'rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700' : 'rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500') : 'block truncate'">{{ displayValue(row[field.key], field) }}</span></td>
-                <td class="whitespace-nowrap px-4 py-3 text-right"><NuxtLink :to="`${basePath}/${row.id}`" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-primary" :aria-label="`Edit ${resource.label}`"><span class="material-symbols-outlined text-lg">{{ resource.allowCreate === false ? 'visibility' : 'edit' }}</span></NuxtLink><button v-if="resource.allowDelete !== false" class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600" :aria-label="`Hapus ${resource.label}`" @click="removeRow(row)"><span class="material-symbols-outlined text-lg">delete</span></button></td>
+              <tr 
+                v-for="row in pageRows" 
+                :key="String(row.id)" 
+                class="hover:bg-slate-50/70"
+              >
+                <!-- Data Cells -->
+                <td 
+                  v-for="field in visibleFields" 
+                  :key="field.key" 
+                  class="max-w-64 px-4 py-3 text-slate-700"
+                >
+                  <span :class="field.type === 'boolean' ? (row[field.key] ? 'rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700' : 'rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500') : 'block truncate'">
+                    {{ displayValue(row[field.key], field) }}
+                  </span>
+                </td>
+
+                <!-- Action Cells -->
+                <td class="whitespace-nowrap px-4 py-3 text-right">
+                  <NuxtLink 
+                    :to="`${basePath}/${row.id}`" 
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-primary" 
+                    :aria-label="`Edit ${resource.label}`"
+                  >
+                    <span class="material-symbols-outlined text-lg">
+                      {{ resource.allowCreate === false ? 'visibility' : 'edit' }}
+                    </span>
+                  </NuxtLink>
+                  <button 
+                    v-if="resource.allowDelete !== false" 
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600" 
+                    :aria-label="`Hapus ${resource.label}`" 
+                    @click="removeRow(row)"
+                  >
+                    <span class="material-symbols-outlined text-lg">delete</span>
+                  </button>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <!-- Pagination -->
         <footer v-if="filteredRows.length" class="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm text-slate-500">
-          <span>{{ (currentPage - 1) * perPage + 1 }}–{{ Math.min(currentPage * perPage, filteredRows.length) }} dari {{ filteredRows.length }}</span>
-          <div class="flex gap-2"><button class="grid h-8 w-8 place-items-center rounded border border-slate-200 disabled:opacity-40" aria-label="Halaman sebelumnya" :disabled="currentPage <= 1" @click="currentPage--"><span class="material-symbols-outlined text-lg">chevron_left</span></button><button class="grid h-8 w-8 place-items-center rounded border border-slate-200 disabled:opacity-40" aria-label="Halaman berikutnya" :disabled="currentPage >= totalPages" @click="currentPage++"><span class="material-symbols-outlined text-lg">chevron_right</span></button></div>
+          <span>
+            {{ (currentPage - 1) * perPage + 1 }}–{{ Math.min(currentPage * perPage, filteredRows.length) }} dari {{ filteredRows.length }}
+          </span>
+          <div class="flex gap-2">
+            <button 
+              class="grid h-8 w-8 place-items-center rounded border border-slate-200 disabled:opacity-40" 
+              aria-label="Halaman sebelumnya" 
+              :disabled="currentPage <= 1" 
+              @click="currentPage--"
+            >
+              <span class="material-symbols-outlined text-lg">chevron_left</span>
+            </button>
+            <button 
+              class="grid h-8 w-8 place-items-center rounded border border-slate-200 disabled:opacity-40" 
+              aria-label="Halaman berikutnya" 
+              :disabled="currentPage >= totalPages" 
+              @click="currentPage++"
+            >
+              <span class="material-symbols-outlined text-lg">chevron_right</span>
+            </button>
+          </div>
         </footer>
       </div>
     </template>
