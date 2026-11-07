@@ -1,41 +1,108 @@
 import type { User } from '@supabase/supabase-js';
 
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name?: string;
+  role: 'super_admin' | 'director' | 'manager' | 'employee';
+  jabatan?: string;
+  departemen?: string;
+  is_active: boolean;
+  status: 'active' | 'inactive' | 'on_leave' | 'terminated';
+}
+
+export interface UserPermissions {
+  can_create_users: boolean;
+  can_delete_users: boolean;
+  can_edit_users: boolean;
+  can_view_reports: boolean;
+  can_manage_content: boolean;
+  can_manage_roles: boolean;
+  can_view_all_data: boolean;
+  can_export_data: boolean;
+}
+
 export const useAuth = () => {
   const { $supabase } = useNuxtApp();
-  const user = useState<User | null>('admin-user', () => null);
+  const user = useState<AdminUser | null>('admin-user', () => null);
+  const userRole = useState<string | null>('admin-user-role', () => null);
+  const userPermissions = useState<UserPermissions | null>('admin-user-permissions', () => null);
   const loading = useState('admin-auth-loading', () => false);
   const isInitialized = useState('admin-auth-init', () => false);
 
   const checkAuth = async (skipCache = false) => {
     if (!$supabase) return null;
     
-    // Return cached user if already checked and skip not requested
     if (!skipCache && isInitialized.value && user.value) {
       return user.value;
     }
 
     try {
-      const { data, error } = await $supabase.auth.getSession();
-      if (error) throw error;
-      if (!data.session?.user) {
+      const { data: sessionData, error: sessionError } = await $supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      if (!sessionData.session?.user) {
         user.value = null;
+        userRole.value = null;
+        userPermissions.value = null;
         isInitialized.value = true;
         return null;
       }
 
+      // Get admin profile with role & permissions
       const { data: adminProfile, error: profileError } = await $supabase
         .from('admin_users')
-        .select('id')
-        .eq('id', data.session.user.id)
+        .select(`
+          id,
+          email,
+          full_name,
+          role,
+          jabatan,
+          departemen,
+          is_active,
+          status
+        `)
+        .eq('id', sessionData.session.user.id)
         .eq('is_active', true)
         .maybeSingle();
+      
       if (profileError) throw profileError;
 
-      user.value = adminProfile ? data.session.user : null;
+      if (!adminProfile) {
+        user.value = null;
+        userRole.value = null;
+        userPermissions.value = null;
+        isInitialized.value = true;
+        return null;
+      }
+
+      // Get role permissions
+      const { data: permissions, error: permError } = await $supabase
+        .from('role_permissions')
+        .select(`
+          can_create_users,
+          can_delete_users,
+          can_edit_users,
+          can_view_reports,
+          can_manage_content,
+          can_manage_roles,
+          can_view_all_data,
+          can_export_data
+        `)
+        .eq('role', adminProfile.role)
+        .maybeSingle();
+
+      if (permError) throw permError;
+
+      user.value = adminProfile as AdminUser;
+      userRole.value = adminProfile.role;
+      userPermissions.value = permissions || null;
       isInitialized.value = true;
+      
       return user.value;
     } catch (error) {
       user.value = null;
+      userRole.value = null;
+      userPermissions.value = null;
       isInitialized.value = true;
       throw error;
     }
@@ -48,7 +115,7 @@ export const useAuth = () => {
     try {
       const { data, error } = await $supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      const adminUser = await checkAuth();
+      const adminUser = await checkAuth(true);
       if (!adminUser) {
         await $supabase.auth.signOut();
         throw new Error('Akun ini belum terdaftar sebagai admin aktif.');
@@ -67,11 +134,31 @@ export const useAuth = () => {
       const { error } = await $supabase.auth.signOut();
       if (error) throw error;
       user.value = null;
+      userRole.value = null;
+      userPermissions.value = null;
       await navigateTo('/admin/login');
     } finally {
       loading.value = false;
     }
   };
 
-  return { user, loading, login, logout, checkAuth };
+  const hasPermission = (permission: keyof UserPermissions): boolean => {
+    return userPermissions.value?.[permission] === true || false;
+  };
+
+  const canViewPage = (requiredRoles: string[]): boolean => {
+    return userRole.value ? requiredRoles.includes(userRole.value) : false;
+  };
+
+  return {
+    user,
+    userRole,
+    userPermissions,
+    loading,
+    login,
+    logout,
+    checkAuth,
+    hasPermission,
+    canViewPage
+  };
 };
