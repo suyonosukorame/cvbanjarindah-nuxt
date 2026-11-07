@@ -1,22 +1,15 @@
 export default defineNuxtConfig({
-  // Hybrid rendering: SSR for dynamic pages, static for others
+  // Enable SSR for dynamic features
   ssr: true,
   compatibilityDate: '2024-11-06',
 
-  // Route rules for hybrid rendering
+  // Route rules for optimization
   routeRules: {
-    // Static pages (pre-rendered at build time)
-    '/': { prerender: true },
-    '/tentang': { prerender: true },
-    '/kontak': { prerender: true },
-    
-    // Dynamic pages (server-side rendered)
-    '/produk': { ssr: true }, // Data from Supabase
-    '/area': { ssr: true },   // Data from Supabase
-    '/admin/**': { ssr: true }, // Admin dashboard
-    
-    // API routes (server-side only)
-    '/api/**': { cors: true },
+    // Dynamic pages (server-side rendered on demand)
+    '/produk': { swr: 3600 }, // Cache for 1 hour
+    '/area': { swr: 3600 },
+    '/admin/**': { ssr: true }, // Admin always SSR
+    '/api/**': { cors: true }, // API routes
   },
 
   // Deploy target: Cloudflare Workers (supports SSR)
