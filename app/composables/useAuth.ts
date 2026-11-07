@@ -4,27 +4,41 @@ export const useAuth = () => {
   const { $supabase } = useNuxtApp();
   const user = useState<User | null>('admin-user', () => null);
   const loading = useState('admin-auth-loading', () => false);
+  const isInitialized = useState('admin-auth-init', () => false);
 
-  const checkAuth = async () => {
+  const checkAuth = async (skipCache = false) => {
     if (!$supabase) return null;
-
-    const { data, error } = await $supabase.auth.getSession();
-    if (error) throw error;
-    if (!data.session?.user) {
-      user.value = null;
-      return null;
+    
+    // Return cached user if already checked and skip not requested
+    if (!skipCache && isInitialized.value && user.value) {
+      return user.value;
     }
 
-    const { data: adminProfile, error: profileError } = await $supabase
-      .from('admin_users')
-      .select('id')
-      .eq('id', data.session.user.id)
-      .eq('is_active', true)
-      .maybeSingle();
-    if (profileError) throw profileError;
+    try {
+      const { data, error } = await $supabase.auth.getSession();
+      if (error) throw error;
+      if (!data.session?.user) {
+        user.value = null;
+        isInitialized.value = true;
+        return null;
+      }
 
-    user.value = adminProfile ? data.session.user : null;
-    return user.value;
+      const { data: adminProfile, error: profileError } = await $supabase
+        .from('admin_users')
+        .select('id')
+        .eq('id', data.session.user.id)
+        .eq('is_active', true)
+        .maybeSingle();
+      if (profileError) throw profileError;
+
+      user.value = adminProfile ? data.session.user : null;
+      isInitialized.value = true;
+      return user.value;
+    } catch (error) {
+      user.value = null;
+      isInitialized.value = true;
+      throw error;
+    }
   };
 
   const login = async (email: string, password: string) => {

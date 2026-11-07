@@ -5,9 +5,25 @@
       <span class="min-w-0 flex-1 truncate text-sm text-slate-600">Gambar terpilih</span>
       <button type="button" class="grid h-8 w-8 shrink-0 place-items-center rounded text-slate-500 hover:bg-white hover:text-red-600" aria-label="Hapus gambar" @click="emit('update:modelValue', '')"><span class="material-symbols-outlined text-lg">close</span></button>
     </div>
-    <label :for="inputId" :class="['flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 px-4 py-5 text-center transition-colors hover:border-primary hover:bg-orange-50/40', disabled ? 'pointer-events-none opacity-50' : '']">
-      <span class="material-symbols-outlined text-2xl text-slate-400">cloud_upload</span>
-      <span class="mt-1 text-sm font-semibold text-slate-700">Pilih gambar untuk diunggah</span>
+    <label 
+      :for="inputId" 
+      :class="[
+        'flex min-h-24 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-5 text-center transition-all',
+        isDragging 
+          ? 'border-primary bg-primary/5 scale-[1.01]' 
+          : 'border-slate-300 hover:border-primary hover:bg-orange-50/40',
+        disabled ? 'pointer-events-none opacity-50' : ''
+      ]"
+      @dragover.prevent="isDragging = true"
+      @dragleave.prevent="isDragging = false"
+      @drop.prevent="handleDrop"
+    >
+      <span class="material-symbols-outlined text-2xl" :class="isDragging ? 'text-primary' : 'text-slate-400'">
+        cloud_upload
+      </span>
+      <span class="mt-1 text-sm font-semibold text-slate-700">
+        {{ isDragging ? 'Lepas gambar di sini' : 'Pilih gambar atau drag & drop' }}
+      </span>
       <span class="mt-1 text-xs text-slate-500">JPG, PNG, WebP · Maks. {{ maxSizeMB }} MB</span>
       <input :id="inputId" type="file" accept="image/jpeg,image/png,image/webp" class="sr-only" :disabled="disabled" @change="selectFile">
     </label>
@@ -28,22 +44,39 @@ const emit = defineEmits<{
   error: [message: string];
 }>();
 const inputId = useId();
+const isDragging = ref(false);
+
+const validateFile = (file: File) => {
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    emit('error', 'Format gambar harus JPG, PNG, atau WebP.');
+    return false;
+  }
+  if (file.size > props.maxSizeMB * 1024 * 1024) {
+    emit('error', `Ukuran gambar maksimal ${props.maxSizeMB} MB.`);
+    return false;
+  }
+  emit('error', '');
+  return true;
+};
 
 const selectFile = (event: Event) => {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = '';
   if (!file) return;
-  const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-  if (!allowedTypes.includes(file.type)) {
-    emit('error', 'Format gambar harus JPG, PNG, atau WebP.');
-    return;
+  if (validateFile(file)) {
+    emit('upload', file);
   }
-  if (file.size > props.maxSizeMB * 1024 * 1024) {
-    emit('error', `Ukuran gambar maksimal ${props.maxSizeMB} MB.`);
-    return;
+};
+
+const handleDrop = (event: DragEvent) => {
+  if (props.disabled) return;
+  isDragging.value = false;
+  const file = event.dataTransfer?.files?.[0];
+  if (!file) return;
+  if (validateFile(file)) {
+    emit('upload', file);
   }
-  emit('error', '');
-  emit('upload', file);
 };
 </script>
