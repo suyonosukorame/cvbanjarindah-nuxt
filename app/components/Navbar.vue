@@ -2,15 +2,13 @@
   <nav class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
       <!-- Logo -->
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-lg">
-          BI
-        </div>
-        <div>
-          <h1 class="font-black text-lg text-slate-900">CV Banjar Indah</h1>
-          <p class="text-[10px] text-slate-500">Kalimantan</p>
-        </div>
-      </div>
+      <NuxtLink to="/" class="flex items-center gap-3">
+        <img 
+          src="/cv.banjarindah.png" 
+          alt="CV Banjar Indah Logo" 
+          class="h-12 w-auto object-contain"
+        />
+      </NuxtLink>
 
       <!-- Desktop Menu -->
       <div class="hidden md:flex items-center gap-8">
