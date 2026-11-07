@@ -7,7 +7,13 @@
 </template>
 
 <script setup lang="ts">
-// Global setup - no dark mode
+// Global setup - auto track page visits
+const { startTracking } = usePageTracking()
+
+// Start tracking when app mounts (client-side only)
+onMounted(() => {
+  startTracking()
+})
 </script>
 
 <style>
