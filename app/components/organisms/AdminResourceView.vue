@@ -193,9 +193,25 @@
                 <td 
                   v-for="field in visibleFields" 
                   :key="field.key" 
-                  class="max-w-64 px-4 py-3 text-slate-700"
+                  class="px-4 py-3"
                 >
-                  <span :class="field.type === 'boolean' ? (row[field.key] ? 'rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700' : 'rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500') : 'block truncate'">
+                  <!-- Image Field -->
+                  <MoleculesTableImageCell
+                    v-if="field.type === 'image'"
+                    :image-url="row[field.key]"
+                    :item-name="row.name || row.customer_name || row.customer_company || 'Item'"
+                  />
+                  
+                  <!-- Boolean Field -->
+                  <span 
+                    v-else-if="field.type === 'boolean'"
+                    :class="row[field.key] ? 'rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700' : 'rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500'"
+                  >
+                    {{ row[field.key] ? 'Aktif' : 'Nonaktif' }}
+                  </span>
+                  
+                  <!-- Other Fields -->
+                  <span v-else class="block truncate max-w-64 text-slate-700">
                     {{ displayValue(row[field.key], field) }}
                   </span>
                 </td>
