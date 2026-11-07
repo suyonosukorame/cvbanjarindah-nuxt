@@ -62,7 +62,8 @@ export default defineNuxtConfig({
         { name: 'theme-color', content: '#ff5910' },
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'icon', type: 'image/png', href: '/cv.banjarindah.png' },
+        { rel: 'apple-touch-icon', href: '/cv.banjarindah.png' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined' },
       ],
