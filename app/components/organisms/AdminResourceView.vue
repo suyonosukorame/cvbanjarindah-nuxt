@@ -201,8 +201,10 @@ const uploadImage = async (field: AdminField, file: File) => {
     if (error) throw error;
     const { data: publicUrl } = $supabase.storage.from(field.bucket).getPublicUrl(data.path);
     form.value[field.key] = publicUrl.publicUrl;
+    toast.success(`Gambar berhasil diunggah`);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Gagal mengunggah gambar.';
+    toast.error(errorMessage.value);
   } finally {
     saving.value = false;
   }

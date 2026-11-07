@@ -104,6 +104,7 @@ const emit = defineEmits<{
 }>()
 
 const { upload, validateFile, loading, error } = useCloudinary()
+const toast = useToast()
 
 const images = computed(() => props.modelValue)
 const errors = ref<string[]>([])
@@ -180,10 +181,12 @@ async function uploadFiles(files: File[]) {
   if (newUrls.length > 0) {
     emit('update:modelValue', [...images.value, ...newUrls])
     emit('upload-success', uploadedImages)
+    toast.success(`${uploadedImages.length} gambar berhasil diunggah`)
   }
   
   if (errors.value.length > 0) {
     emit('upload-error', errors.value)
+    toast.error(`${errors.value.length} gambar gagal diunggah`)
   }
   
   loadingIndex.value = null

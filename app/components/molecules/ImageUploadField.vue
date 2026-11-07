@@ -102,6 +102,7 @@ const emit = defineEmits<{
 }>()
 
 const { upload, validateFile, fileToDataUrl, loading, error } = useCloudinary()
+const toast = useToast()
 
 const selectedFile = ref<File | null>(null)
 const previewUrl = ref<string>('')
@@ -129,6 +130,8 @@ async function uploadFile(file: File) {
   
   if (!validation.valid) {
     errorMessage.value = validation.error || 'Invalid file'
+    emit('upload-error', errorMessage.value)
+    toast.error(errorMessage.value)
     return
   }
   
@@ -148,6 +151,7 @@ async function uploadFile(file: File) {
     emit('upload-success', result)
     previewUrl.value = '' // Clear preview, use actual URL
     uploadProgress.value = 100
+    toast.success(`Gambar berhasil diunggah`)
   } else {
     // Error
     const errMsg = error.value || 'Upload failed'
@@ -155,6 +159,7 @@ async function uploadFile(file: File) {
     emit('upload-error', errMsg)
     previewUrl.value = ''
     selectedFile.value = null
+    toast.error(errMsg)
   }
 }
 
