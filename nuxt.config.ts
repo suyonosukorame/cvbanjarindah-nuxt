@@ -12,9 +12,9 @@ export default defineNuxtConfig({
     '/api/**': { cors: true }, // API routes
   },
 
-  // Deploy target: Cloudflare Workers (supports SSR)
+  // Deploy target: Cloudflare Pages (supports SSR)
   nitro: {
-    preset: 'cloudflare-module',
+    preset: 'cloudflare-pages',
   },
   
   srcDir: 'app/',
