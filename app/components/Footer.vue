@@ -42,10 +42,10 @@
       </div>
 
       <!-- Divider -->
-      <div class="border-t border-slate-800 pt-8">
+      <div class="border-t border-slate-800 pt-8 mb-8">
         <div class="flex flex-col md:flex-row items-center justify-between">
           <p class="text-slate-400 text-sm">
-            © 2024 CV Banjar Indah. Semua hak cipta dilindungi.
+            Semua hak cipta dilindungi.
           </p>
           <div class="flex gap-4 mt-4 md:mt-0">
             <a href="#" class="text-slate-400 hover:text-white transition">Twitter</a>
@@ -55,9 +55,56 @@
         </div>
       </div>
     </div>
+
+    <!-- Footer Copyright with Stats -->
+    <MoleculesFooterCopyright
+      organization="CV Banjar Indah"
+      developer-name="IonStack"
+      developer-link="https://ionstack.vercel.app/"
+      :stats="stats"
+      :show-admin="true"
+      admin-link="/admin/login"
+    />
   </footer>
 </template>
 
 <script setup lang="ts">
-// Footer without dark mode
+// Footer with real-time stats from Supabase
+const stats = ref({
+  visits: 0,
+  visitors: 0,
+})
+
+// Fetch stats from Supabase on component mount
+onMounted(async () => {
+  await fetchStats()
+})
+
+async function fetchStats() {
+  try {
+    const supabase = useSupabase()
+    
+    // Fetch visit count (total page views)
+    const { count: visitCount } = await supabase
+      .from('page_visits')
+      .select('*', { count: 'exact', head: true })
+    
+    // Fetch unique visitors
+    const { count: visitorCount } = await supabase
+      .from('unique_visitors')
+      .select('*', { count: 'exact', head: true })
+    
+    stats.value = {
+      visits: visitCount || 0,
+      visitors: visitorCount || 0,
+    }
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+    // Use default values on error
+    stats.value = {
+      visits: 0,
+      visitors: 0,
+    }
+  }
+}
 </script>
