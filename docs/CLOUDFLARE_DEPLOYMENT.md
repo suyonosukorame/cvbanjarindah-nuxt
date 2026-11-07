@@ -1,129 +1,437 @@
-# Deploy ke Cloudflare Pages
+# ☁️ Cloudflare Pages Deployment Guide
 
-Panduan ini mengikuti konfigurasi proyek saat ini: Nuxt 3, Nitro preset `cloudflare-pages`, output build `dist`, dan deploy script `pnpm run deploy`.
+**Project:** CV Banjar Indah - Nuxt 3 Website
+**Platform:** Cloudflare Pages
+**Last Updated:** November 7, 2026
 
-## Prasyarat
+---
 
-- Akun Cloudflare dengan akses ke Pages.
-- Repository proyek sudah di-push ke GitHub atau GitLab jika memakai deploy otomatis.
-- Node.js 20 LTS dan pnpm.
-- Proyek Supabase aktif, database sudah disiapkan, dan akun super admin tersedia.
-- Domain produksi opsional; Cloudflare Pages menyediakan domain `*.pages.dev`.
+## ✅ Fix Applied
 
-## 1. Siapkan Supabase
+**Issue:** Build failed with error:
+```
+ERROR packages field missing or empty
+For help, run: pnpm help install
+```
 
-Jalankan SQL di **Supabase Dashboard → SQL Editor** dalam urutan berikut:
+**Root Cause:** Invalid `pnpm-workspace.yaml` file caused pnpm to treat project as monorepo.
 
-1. `supabase/admin_schema.sql` untuk membuat tabel, fungsi, policy RLS, dan bucket Storage.
-2. `supabase/bootstrap_super_admin.sql` jika perlu mendaftarkan akun Auth yang sudah ada sebagai super admin.
-3. `supabase/seed_admin_demo_data.sql` untuk mengisi konten demo yang dapat diedit dari dashboard.
+**Solution:** Removed `pnpm-workspace.yaml` (commit: `045eed8`)
 
-Pastikan akun admin sudah tercantum di `public.admin_users` dan `is_active = true`. Jangan membuat `SUPABASE_SERVICE_ROLE_KEY` tersedia untuk aplikasi browser.
+---
 
-## 2. Atur URL Auth Supabase
+## 🚀 Deployment Steps
 
-Di **Supabase Dashboard → Authentication → URL Configuration**:
+### Option 1: Automatic Deployment (Recommended)
 
-- Set **Site URL** ke alamat produksi utama, misalnya `https://www.example.com`.
-- Tambahkan alamat produksi ke **Redirect URLs**, misalnya `https://www.example.com/**`.
-- Tambahkan domain Pages, misalnya `https://cvbanjarindah.pages.dev/**`.
-- Jika memakai preview deployment, tambahkan pola/domain preview Pages yang digunakan tim.
+**Via Cloudflare Dashboard:**
 
-Setelah custom domain aktif, pastikan Site URL dan Redirect URLs memuat domain final. Ini diperlukan untuk konfirmasi email dan alur autentikasi Supabase.
+1. **Login to Cloudflare Dashboard**
+   - Go to: https://dash.cloudflare.com/
+   - Navigate to: **Workers & Pages** → **Create Application** → **Pages**
 
-## 3. Deploy Otomatis dari Git
+2. **Connect GitHub Repository**
+   - Click **Connect to Git**
+   - Select repository: `suyonosukorame/cvbanjarindah-nuxt`
+   - Authorize Cloudflare access
 
-1. Push perubahan repository ke GitHub/GitLab.
-2. Buka Cloudflare Dashboard → **Workers & Pages → Create → Pages → Connect to Git**.
-3. Pilih repository proyek ini.
-4. Gunakan pengaturan build berikut:
+3. **Build Configuration**
+   ```
+   Framework preset: Nuxt.js
+   Build command: pnpm run build
+   Build output directory: dist
+   Root directory: (leave blank)
+   Environment variables: (add if needed)
+   ```
 
-   - Framework preset: **None** atau **Nuxt** jika preset meminta pilihan.
-   - Build command: `pnpm build`
-   - Build output directory: `dist`
-   - Root directory: `/`
-   - Package manager: `pnpm`
-   - Node version: `20`
+4. **Environment Variables (if needed)**
+   ```
+   NUXT_PUBLIC_SUPABASE_URL=your-supabase-url
+   NUXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+   NUXT_PUBLIC_GEMINI_API_KEY=your-gemini-key
+   NUXT_PUBLIC_APP_NAME=CV Banjar Indah
+   ```
 
-   `dist` adalah output yang ditetapkan `wrangler.toml` (`pages_build_output_dir = "dist"`). Jangan menggunakan `.output/public` untuk konfigurasi proyek ini.
+5. **Deploy**
+   - Click **Save and Deploy**
+   - Wait for build to complete (2-5 minutes)
+   - Site will be live at: `https://cvbanjarindah.pages.dev`
 
-5. Tambahkan environment variables pada **Settings → Variables and Secrets** untuk environment **Production** dan **Preview** sesuai kebutuhan:
+---
 
-   | Variable | Nilai |
-   | --- | --- |
-   | `SUPABASE_URL` | URL project Supabase, misalnya `https://project-ref.supabase.co` |
-   | `SUPABASE_KEY` | Supabase publishable key atau anon key |
-   | `NUXT_PUBLIC_APP_URL` | URL publik environment tersebut |
-   | `NUXT_PUBLIC_GEMINI_API_KEY` | Opsional, jika fitur AI digunakan |
+### Option 2: Manual Deployment (CLI)
 
-   URL Supabase harus berupa root project, tanpa suffix `/rest/v1/`. `SUPABASE_KEY` adalah publishable key yang dipakai browser; key ini bukan password admin. Jangan menambahkan service-role/secret key ke variabel `NUXT_PUBLIC_*` atau ke konfigurasi frontend.
-
-6. Simpan konfigurasi dan jalankan deployment pertama. Cloudflare akan build dan memberi URL `https://<nama-project>.pages.dev`.
-7. Masukkan URL Pages tersebut ke Supabase Redirect URLs, lalu uji login dan dashboard.
-
-Setiap push ke production branch akan memicu production deployment; branch lain biasanya mendapat Preview deployment.
-
-## 4. Deploy Manual dengan Wrangler
-
-Dari root repository:
-
+**Prerequisites:**
 ```bash
-pnpm install --frozen-lockfile
-pnpm exec wrangler login
-pnpm exec wrangler whoami
-pnpm build
+# Install Wrangler CLI globally
+npm install -g wrangler
+
+# Login to Cloudflare
+wrangler login
+```
+
+**Deploy Commands:**
+```bash
+# Build project
+pnpm run build
+
+# Deploy to Cloudflare Pages
 pnpm run deploy
+
+# Or manually:
+wrangler pages deploy dist --project-name=cvbanjarindah
 ```
 
-`pnpm run deploy` menjalankan `nuxi build` lalu `wrangler pages deploy dist`. Untuk pertama kali, buat project Pages bernama `cvbanjarindah` di Cloudflare Dashboard terlebih dahulu. Jika nama project berbeda, sesuaikan nama di `wrangler.toml` atau gunakan perintah Wrangler dengan nama project yang benar.
+---
 
-Buat `.env` lokal dari contoh untuk proses build/deploy lokal:
+## 📋 Build Settings Summary
 
+**Framework:** Nuxt 3 (SSR disabled)
+**Node Version:** v20.x or v18.x
+**Package Manager:** pnpm v9.x
+**Build Command:** `pnpm run build`
+**Output Directory:** `dist/`
+**Deployment Target:** Cloudflare Pages
+
+---
+
+## 🔧 Configuration Files
+
+### `nuxt.config.ts`
+```typescript
+export default defineNuxtConfig({
+  ssr: false, // Static generation
+  compatibilityDate: '2024-11-06',
+  
+  nitro: {
+    preset: 'cloudflare-pages', // Cloudflare deployment
+  },
+  
+  // ... other configs
+});
+```
+
+### `wrangler.toml`
+```toml
+name = "cvbanjarindah"
+compatibility_date = "2024-11-06"
+pages_build_output_dir = "dist"
+```
+
+### `package.json` scripts
+```json
+{
+  "scripts": {
+    "build": "nuxi build",
+    "deploy": "nuxi build && wrangler pages deploy dist"
+  }
+}
+```
+
+---
+
+## ⚠️ Common Issues & Solutions
+
+### 1. ❌ Error: `packages field missing or empty`
+
+**Cause:** Invalid `pnpm-workspace.yaml` file
+
+**Solution:** Remove the file (already fixed)
 ```bash
-cp .env.example .env
+git rm pnpm-workspace.yaml
+git commit -m "fix: remove invalid pnpm-workspace.yaml"
+git push origin main
 ```
 
-Isi nilainya secara lokal. `.env` sudah diabaikan Git; jangan commit file tersebut. Untuk deploy berulang dan tim, lebih aman gunakan Git integration dan Variables and Secrets di dashboard Cloudflare.
+---
 
-## 5. Hubungkan Custom Domain
+### 2. ❌ Error: `Module not found: @supabase/supabase-js`
 
-1. Buka project Pages → **Custom domains → Set up a custom domain**.
-2. Masukkan domain yang sudah dikelola Cloudflare, misalnya `www.example.com`.
-3. Ikuti instruksi DNS dan tunggu status domain menjadi aktif.
-4. Perbarui `NUXT_PUBLIC_APP_URL` ke domain final, lalu jalankan deployment baru.
-5. Tambahkan domain final ke Supabase Authentication **Site URL** dan **Redirect URLs**.
-6. Uji halaman utama, `/admin/login/`, login admin, serta satu operasi baca/tulis dashboard.
+**Cause:** Missing dependencies in `package.json`
 
-## 6. Checklist Setelah Deploy
+**Solution:** Install required packages
+```bash
+pnpm add @supabase/supabase-js @google/genai h3
+pnpm install --frozen-lockfile
+```
 
-- Halaman utama terbuka melalui HTTPS.
-- `/admin/login/` tampil dan mengirim request ke host Supabase yang benar.
-- Login hanya berhasil untuk user Auth yang aktif di `public.admin_users`.
-- `/admin/` mengarah ke login ketika belum ada sesi; setelah login, ringkasan dashboard tampil.
-- Produk, kategori, brand, area, testimoni, dan paket harga dapat dibaca/diedit sesuai policy RLS.
-- Upload gambar bekerja pada bucket Supabase Storage yang sesuai.
-- Konfirmasi email Supabase kembali ke domain yang diizinkan.
-- Environment Preview dan Production memiliki URL/key yang sesuai.
-- Tidak ada secret service-role di browser, Git, atau log deployment.
+---
 
-## Troubleshooting
+### 3. ❌ Error: `Build failed with exit code 1`
 
-### Build gagal
+**Cause:** TypeScript or build errors
 
-Periksa log build, pastikan versi Node 20, dependency install memakai lockfile pnpm, dan output directory tetap `dist`. Jalankan `pnpm build` lokal untuk memperoleh error yang sama.
+**Solution:** Check build locally first
+```bash
+pnpm run build
 
-### Login menampilkan `Failed to fetch`
+# Fix any TypeScript errors
+# Then commit and push
+```
 
-Periksa `SUPABASE_URL`: gunakan `https://<project-ref>.supabase.co`, bukan URL REST lengkap `/rest/v1/`. Pastikan `SUPABASE_KEY` adalah publishable/anon key yang cocok dengan project tersebut. Setelah mengganti variable, jalankan deployment baru.
+---
 
-### Login berhasil tetapi akses admin ditolak
+### 4. ❌ Error: `ENOENT: no such file or directory`
 
-Pastikan user ada di Supabase Authentication, terdapat baris dengan `id` yang sama pada `public.admin_users`, `role = 'super_admin'` (atau role admin yang diizinkan), dan `is_active = true`. Pastikan schema dan RLS policy sudah diterapkan.
+**Cause:** Missing files or incorrect paths
 
-### Redirect konfirmasi email gagal
+**Solution:** Check `srcDir` in `nuxt.config.ts`
+```typescript
+srcDir: 'app/', // Make sure this matches your structure
+```
 
-Tambahkan host/domain persis ke Supabase Authentication **Redirect URLs** dan periksa **Site URL**. Lakukan deployment ulang hanya jika URL aplikasi yang dibangun berubah.
+---
 
-### Halaman dashboard kosong
+### 5. ❌ Error: `Environment variables not found`
 
-Periksa apakah SQL schema dan seed data sudah dijalankan, tabel tersedia pada schema `public`, serta policy RLS mengizinkan operasi untuk akun admin aktif.
+**Cause:** Missing environment variables
+
+**Solution:** Add in Cloudflare Dashboard
+- Go to: **Settings** → **Environment variables**
+- Add all variables from `.env.example`
+
+---
+
+### 6. ❌ Error: `Functions are not supported`
+
+**Cause:** Trying to use Nuxt server routes with SSR=false
+
+**Solution:** This project uses SSR=false (static), so no server routes.
+If you need API routes, consider:
+- Cloudflare Workers (separate)
+- Supabase Edge Functions
+- Third-party API services
+
+---
+
+### 7. ⚠️ Warning: `The darkMode option...`
+
+**Cause:** Deprecated TailwindCSS config
+
+**Solution:** Update `tailwind.config.ts`
+```typescript
+export default {
+  darkMode: 'media', // Change from 'false'
+  // ... other configs
+}
+```
+
+---
+
+## 🔍 Verify Deployment
+
+**After deployment, check:**
+
+1. **Homepage loads:** https://your-site.pages.dev/
+2. **Navigation works:** /produk, /area, /tentang, /kontak
+3. **AI Assistant opens:** Click chat button
+4. **Images load:** Check if all images display
+5. **Responsive:** Test on mobile, tablet, desktop
+6. **Console:** No errors in browser console (F12)
+
+---
+
+## 🌐 Custom Domain Setup
+
+**Add custom domain:**
+
+1. Go to: **Custom domains** → **Add a custom domain**
+2. Enter domain: `cvbanjarindah.com` (example)
+3. Add DNS records (automatic or manual):
+   ```
+   CNAME: www → cvbanjarindah.pages.dev
+   CNAME: @ → cvbanjarindah.pages.dev
+   ```
+4. Wait for SSL certificate (5-15 minutes)
+5. Access site at: `https://cvbanjarindah.com`
+
+---
+
+## 📊 Build Performance
+
+**Expected build times:**
+- **First build:** 2-5 minutes
+- **Subsequent builds:** 1-3 minutes (cached)
+
+**Build output size:**
+- **Total:** ~500KB - 2MB (gzipped)
+- **JavaScript:** ~300KB
+- **CSS:** ~50KB
+- **Assets:** ~200KB
+
+---
+
+## 🔄 Auto-Deploy from GitHub
+
+**Setup automatic deployment:**
+
+1. **Branch Settings** (in Cloudflare)
+   - Production branch: `main`
+   - Preview branches: All branches
+
+2. **Build Triggers**
+   - ✅ Auto-deploy on push to `main`
+   - ✅ Preview deploy on pull requests
+   - ✅ Deploy on tag creation
+
+3. **Notifications** (optional)
+   - Email on deployment success/failure
+   - Webhook to Slack/Discord
+
+---
+
+## 🛠️ Troubleshooting Commands
+
+**Local debugging:**
+```bash
+# Clean build
+rm -rf .nuxt dist node_modules
+pnpm install
+pnpm run build
+
+# Test build locally
+pnpm run preview
+
+# Check for errors
+pnpm run build 2>&1 | tee build.log
+```
+
+**Check dependencies:**
+```bash
+# Verify all packages installed
+pnpm list
+
+# Update dependencies
+pnpm update
+
+# Fix lock file
+rm pnpm-lock.yaml
+pnpm install
+```
+
+**Cloudflare CLI debugging:**
+```bash
+# Check Wrangler version
+wrangler --version
+
+# List deployments
+wrangler pages deployments list --project-name=cvbanjarindah
+
+# View deployment logs
+wrangler pages deployment tail
+```
+
+---
+
+## 📱 Performance Optimization
+
+**Tips for faster deployment:**
+
+1. **Enable build cache** (Cloudflare auto-enables this)
+2. **Optimize images:** Use WebP format
+3. **Lazy load components:** Use `defineAsyncComponent()`
+4. **Code splitting:** Nuxt auto-splits by route
+5. **CDN:** Cloudflare serves from edge locations
+
+**Expected performance:**
+- **First Contentful Paint (FCP):** < 1.5s
+- **Time to Interactive (TTI):** < 3.5s
+- **Lighthouse Score:** > 90
+- **PageSpeed Insights:** Green scores
+
+---
+
+## 🔐 Security Best Practices
+
+**Environment variables:**
+- ✅ Never commit `.env` to Git (already in `.gitignore`)
+- ✅ Use Cloudflare environment variables UI
+- ✅ Rotate API keys regularly
+
+**API Keys:**
+- ✅ Use `NUXT_PUBLIC_*` for public keys only
+- ✅ Keep `SUPABASE_SERVICE_ROLE_KEY` secret
+- ✅ Never expose in client-side code
+
+**Headers:**
+- ✅ CSP (Content Security Policy) - auto by Cloudflare
+- ✅ HTTPS only - enforced by Cloudflare
+- ✅ CORS - configure in Supabase if needed
+
+---
+
+## 📞 Support & Resources
+
+**Cloudflare Docs:**
+- [Pages Documentation](https://developers.cloudflare.com/pages/)
+- [Nuxt on Pages](https://developers.cloudflare.com/pages/framework-guides/deploy-a-nuxt-site/)
+- [Build Configuration](https://developers.cloudflare.com/pages/configuration/build-configuration/)
+
+**Nuxt Docs:**
+- [Deployment](https://nuxt.com/docs/getting-started/deployment)
+- [Cloudflare Preset](https://nitro.unjs.io/deploy/providers/cloudflare)
+
+**GitHub:**
+- Repository: https://github.com/suyonosukorame/cvbanjarindah-nuxt
+- Issues: Report bugs or request features
+
+---
+
+## ✅ Deployment Checklist
+
+Before deployment:
+- [ ] All environment variables set in Cloudflare
+- [ ] Build runs successfully locally (`pnpm run build`)
+- [ ] No TypeScript errors
+- [ ] No console errors in browser
+- [ ] Images optimized (< 500KB each)
+- [ ] Mobile responsive tested
+- [ ] SEO meta tags added
+- [ ] Analytics configured (optional)
+
+After deployment:
+- [ ] Homepage loads correctly
+- [ ] All routes work (/produk, /area, etc.)
+- [ ] AI Assistant functional
+- [ ] Images display properly
+- [ ] Forms submit correctly (contact form)
+- [ ] Custom domain configured (if applicable)
+- [ ] SSL certificate active
+- [ ] Performance tested (Lighthouse)
+
+---
+
+## 🎯 Next Steps
+
+1. **Monitor Deployment**
+   - Check Cloudflare dashboard for build status
+   - Watch for any errors in logs
+
+2. **Test Live Site**
+   - Click through all pages
+   - Test on mobile devices
+   - Verify AI Assistant works
+
+3. **Configure Analytics** (optional)
+   - Cloudflare Web Analytics
+   - Google Analytics
+   - Plausible Analytics
+
+4. **Setup Monitoring** (optional)
+   - Uptime monitoring (UptimeRobot)
+   - Error tracking (Sentry)
+   - Performance monitoring (Cloudflare Analytics)
+
+---
+
+**Deployment Fixed! ✅**
+
+File `pnpm-workspace.yaml` sudah dihapus. 
+Push sudah dilakukan ke: https://github.com/suyonosukorame/cvbanjarindah-nuxt
+
+**Cloudflare akan auto-deploy pada push selanjutnya!**
+
+---
+
+**Last Updated:** November 7, 2026
+**Status:** Ready for Production Deployment

@@ -4,7 +4,7 @@
       <!-- Logo -->
       <NuxtLink to="/" class="flex items-center gap-3">
         <img 
-          src="/cv.banjarindah.png" 
+          src="/logo-cv-banjarindah.png" 
           alt="CV Banjar Indah Logo" 
           class="h-12 w-auto object-contain"
         />
