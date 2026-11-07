@@ -30,7 +30,7 @@
         @delete="handleDelete"
       />
       
-      <!-- Replace Button -->
+        <!-- Replace Button -->
       <button
         v-if="!disabled"
         type="button"
@@ -41,6 +41,17 @@
         Replace Image
       </button>
     </div>
+
+    <!-- Optimization Preview Modal -->
+    <MoleculesImageOptimizationPreview
+      :visible="showOptimizationPreview"
+      :optimizing="optimizing"
+      :optimization-percent="optimizationProgress"
+      :optimization-result="optimizationResult"
+      :preview-url="previewUrl"
+      @confirm="confirmUpload"
+      @cancel="cancelUpload"
+    />
     
     <!-- Progress Bar -->
     <AtomsProgressBar
@@ -71,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import type { UploadedImage } from '~/types/cloudinary'
+import type { UploadedImage, ImageOptimizationResult } from '~/types/cloudinary'
 
 interface Props {
   modelValue: string // Image URL
@@ -85,6 +96,7 @@ interface Props {
   uploadDescription?: string
   helperText?: string
   showFilename?: boolean
+  showOptimization?: boolean // Show optimization preview before upload
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -93,6 +105,7 @@ const props = withDefaults(defineProps<Props>(), {
   uploadTitle: 'Click or drag image to upload',
   uploadDescription: 'PNG, JPG, WEBP up to 5MB',
   showFilename: false,
+  showOptimization: true,
 })
 
 const emit = defineEmits<{
@@ -101,7 +114,7 @@ const emit = defineEmits<{
   'upload-error': [error: string]
 }>()
 
-const { upload, validateFile, fileToDataUrl, loading, error } = useCloudinary()
+const { upload, validateFile, fileToDataUrl, convertToWebP, loading, error, optimizationProgress } = useCloudinary()
 const toast = useToast()
 
 const selectedFile = ref<File | null>(null)
@@ -109,6 +122,10 @@ const previewUrl = ref<string>('')
 const errorMessage = ref<string>('')
 const uploadProgress = ref(0)
 const replaceInputRef = ref<HTMLInputElement | null>(null)
+const showOptimizationPreview = ref(false)
+const optimizing = ref(false)
+const optimizationResult = ref<ImageOptimizationResult | null>(null)
+const pendingFile = ref<File | null>(null)
 
 const imageUrl = computed(() => props.modelValue)
 
@@ -116,10 +133,10 @@ async function handleFilesSelected(files: File[]) {
   if (files.length === 0) return
   
   const file = files[0]
-  await uploadFile(file)
+  await prepareUpload(file)
 }
 
-async function uploadFile(file: File) {
+async function prepareUpload(file: File) {
   errorMessage.value = ''
   
   // Validate file
@@ -138,6 +155,49 @@ async function uploadFile(file: File) {
   // Set preview
   selectedFile.value = file
   previewUrl.value = await fileToDataUrl(file)
+  pendingFile.value = file
+  
+  // Show optimization preview if enabled
+  if (props.showOptimization && isOptimizableImage(file.type)) {
+    showOptimizationPreview.value = true
+    optimizing.value = true
+    optimizationResult.value = null
+    
+    // Start optimization in background
+    setTimeout(async () => {
+      const result = await convertToWebP(file, 0.9)
+      optimizationResult.value = result
+      optimizing.value = false
+    }, 100)
+  } else {
+    // Upload directly without optimization preview
+    await uploadFile(file)
+  }
+}
+
+function isOptimizableImage(mimeType: string): boolean {
+  const optimizableFormats = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp']
+  return optimizableFormats.includes(mimeType)
+}
+
+async function confirmUpload() {
+  if (pendingFile.value) {
+    showOptimizationPreview.value = false
+    await uploadFile(pendingFile.value)
+    pendingFile.value = null
+  }
+}
+
+function cancelUpload() {
+  showOptimizationPreview.value = false
+  previewUrl.value = ''
+  selectedFile.value = null
+  pendingFile.value = null
+  errorMessage.value = ''
+}
+
+async function uploadFile(file: File) {
+  errorMessage.value = ''
   
   // Upload to Cloudinary
   uploadProgress.value = 0
@@ -185,7 +245,7 @@ function handleReplaceFileSelect(event: Event) {
   const target = event.target as HTMLInputElement
   const files = Array.from(target.files || [])
   if (files.length > 0) {
-    uploadFile(files[0])
+    prepareUpload(files[0])
   }
   target.value = '' // Reset
 }

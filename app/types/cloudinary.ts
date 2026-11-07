@@ -71,3 +71,23 @@ export interface UploadProgress {
   total: number
   percentage: number
 }
+
+export interface ImageOptimizationResult {
+  original: {
+    size: number
+    format: string
+    width: number
+    height: number
+  }
+  optimized: {
+    blob: Blob
+    size: number
+    format: string
+    width: number
+    height: number
+  }
+  reduction: {
+    bytes: number
+    percent: number
+  }
+}
