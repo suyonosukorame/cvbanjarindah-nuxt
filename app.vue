@@ -3,6 +3,9 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+    
+    <!-- Toast Notifications -->
+    <OrganismsToastContainer />
   </div>
 </template>
 

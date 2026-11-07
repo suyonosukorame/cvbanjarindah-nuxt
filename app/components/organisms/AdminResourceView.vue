@@ -70,6 +70,7 @@ const props = defineProps<{ resourceKey: string }>();
 const route = useRoute();
 const router = useRouter();
 const { $supabase } = useNuxtApp();
+const toast = useToast();
 const resource = computed(() => adminResources[props.resourceKey]);
 const basePath = computed(() => `/admin/${props.resourceKey}`);
 const recordId = computed(() => typeof route.params.id === 'string' ? route.params.id : '');
@@ -173,14 +174,17 @@ const save = async () => {
     if (isCreate.value) {
       const { error } = await $supabase.from(resource.value.table).insert(payload);
       if (error) throw error;
+      toast.success(`${resource.value.label} berhasil ditambahkan`);
     } else {
       const updatePayload = props.resourceKey === 'inquiries' ? { status: payload.status } : payload;
       const { error } = await $supabase.from(resource.value.table).update(updatePayload).eq('id', recordId.value);
       if (error) throw error;
+      toast.success(`${resource.value.label} berhasil diperbarui`);
     }
     await navigateTo(basePath.value);
   } catch (error) {
     errorMessage.value = error instanceof Error ? error.message : 'Gagal menyimpan data.';
+    toast.error(errorMessage.value);
   } finally {
     saving.value = false;
   }
@@ -207,8 +211,13 @@ const removeRow = async (row: Record<string, any>) => {
   if (!$supabase || !resource.value || !window.confirm(`Hapus data ${String(row.name ?? row.customer_name ?? '')}?`)) return;
   errorMessage.value = '';
   const { error } = await $supabase.from(resource.value.table).delete().eq('id', row.id);
-  if (error) errorMessage.value = error.message;
-  else rows.value = rows.value.filter(item => item.id !== row.id);
+  if (error) {
+    errorMessage.value = error.message;
+    toast.error(`Gagal menghapus ${resource.value.label.toLowerCase()}: ${error.message}`);
+  } else {
+    rows.value = rows.value.filter(item => item.id !== row.id);
+    toast.success(`${resource.value.label} berhasil dihapus`);
+  }
 };
 
 watch(() => [props.resourceKey, recordId.value], () => {
