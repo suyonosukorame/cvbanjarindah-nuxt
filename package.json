@@ -7,7 +7,7 @@
     "dev": "nuxi dev",
     "build": "nuxi build",
     "preview": "nuxi preview",
-    "deploy": "nuxi build && wrangler pages deploy dist",
+    "deploy": "nuxi build && wrangler deploy",
     "postinstall": "nuxi prepare"
   },
   "dependencies": {
