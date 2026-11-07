@@ -4,7 +4,7 @@
       <!-- Logo -->
       <NuxtLink to="/" class="flex items-center gap-3">
         <img 
-          src="/logo-cv-banjarindah.png" 
+          :src="logoUrl" 
           alt="CV Banjar Indah Logo" 
           class="h-12 w-auto object-contain"
         />
@@ -58,5 +58,6 @@
 </template>
 
 <script setup lang="ts">
-// Navbar without dark mode
+// Use computed property for logo URL to avoid Vite import issues
+const logoUrl = '/logo-cv-banjarindah.png'
 </script>
