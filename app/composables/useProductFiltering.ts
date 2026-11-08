@@ -7,7 +7,7 @@ interface FilterState {
 export const useProductFiltering = (allProducts: Ref<Product[]>, categories: Ref<string[]>) => {
   const searchQuery = ref('')
   const sortBy = ref('newest')
-  const gridColumns = ref(2)
+  const gridColumns = ref(6)
   const selectedFilters = ref<FilterState>({
     categories: ['Semua']
   })

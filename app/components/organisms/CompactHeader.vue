@@ -65,12 +65,13 @@
 
           <!-- View Toggle -->
           <button
-            @click="emit('update:gridColumns', gridColumns === 2 ? 3 : 2)"
+            @click="emit('update:gridColumns', gridColumns === 2 ? gridMaxColumns : 2)"
             :class="[
               'px-4 py-2.5 rounded-lg border transition-all flex items-center gap-2',
               'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-blue-400'
             ]"
-            title="Ubah tampilan grid"
+            :title="`Tampilkan ${gridColumns === 2 ? gridMaxColumns : 2} kolom`"
+            :aria-label="`Tampilkan ${gridColumns === 2 ? gridMaxColumns : 2} kolom`"
           >
             <svg v-if="gridColumns === 2" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" />
@@ -189,6 +190,7 @@ interface Props {
     categories: string[]
   }
   gridColumns: number
+  gridMaxColumns?: number
 }
 
 interface Emits {
@@ -198,7 +200,9 @@ interface Emits {
   (e: 'update:gridColumns', value: number): void
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  gridMaxColumns: 3
+})
 const emit = defineEmits<Emits>()
 
 const showFilterDrawer = ref(false)

@@ -122,6 +122,22 @@ const gridClasses = computed(() => {
     5: 'grid-cols-5',
     6: 'grid-cols-6'
   }
+  const tabletColClasses: Record<number, string> = {
+    1: 'md:grid-cols-1',
+    2: 'md:grid-cols-2',
+    3: 'md:grid-cols-3',
+    4: 'md:grid-cols-4',
+    5: 'md:grid-cols-5',
+    6: 'md:grid-cols-6'
+  }
+  const desktopColClasses: Record<number, string> = {
+    1: 'lg:grid-cols-1',
+    2: 'lg:grid-cols-2',
+    3: 'lg:grid-cols-3',
+    4: 'lg:grid-cols-4',
+    5: 'lg:grid-cols-5',
+    6: 'lg:grid-cols-6'
+  }
   
   // Mobile columns (default to 2)
   if (columns.mobile) {
@@ -130,14 +146,12 @@ const gridClasses = computed(() => {
   
   // Tablet columns with md: prefix
   if (columns.tablet) {
-    const tabletClass = colClasses[columns.tablet] || 'md:grid-cols-3'
-    baseClasses.push(`md:${tabletClass}`)
+    baseClasses.push(tabletColClasses[columns.tablet] || 'md:grid-cols-3')
   }
   
   // Desktop columns with lg: prefix
   if (columns.desktop) {
-    const desktopClass = colClasses[columns.desktop] || 'lg:grid-cols-4'
-    baseClasses.push(`lg:${desktopClass}`)
+    baseClasses.push(desktopColClasses[columns.desktop] || 'lg:grid-cols-4')
   }
   
   // Gap classes

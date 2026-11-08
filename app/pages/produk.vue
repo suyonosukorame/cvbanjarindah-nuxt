@@ -9,6 +9,7 @@
       :sort-by="sortBy"
       :selected-filters="selectedFilters"
       :grid-columns="gridColumns"
+      :grid-max-columns="6"
       @update:search-query="searchQuery = $event"
       @update:sort-by="sortBy = $event"
       @update:selected-filters="selectedFilters = $event"
