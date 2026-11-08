@@ -29,9 +29,9 @@ const props = defineProps<Props>()
 const gridColumnSettings = computed(() => {
   const cols = props.gridColumns || 2
   return {
-    mobile: Math.min(cols, 2),
-    tablet: Math.min(cols + 1, 3),
-    desktop: cols
+    mobile: Math.min(cols, 2),      // Max 2 kolom di mobile
+    tablet: Math.min(cols + 1, 3),  // Max 3 kolom di tablet
+    desktop: Math.min(cols, 4)      // Max 4 kolom di desktop
   }
 })
 </script>
