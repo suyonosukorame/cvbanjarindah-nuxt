@@ -93,7 +93,7 @@ interface Props {
   areas: CoverageArea[];
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const expandedAreas = ref<boolean[]>([])
 

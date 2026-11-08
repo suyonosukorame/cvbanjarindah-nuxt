@@ -75,7 +75,7 @@ interface Props {
   packages: PricingPackage[];
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const activeTab = ref(0)
 
