@@ -105,8 +105,6 @@
 </template>
 
 <script setup lang="ts">
-import { companyStats, teamMembers, companyValues } from '~/data/content';
-
 definePageMeta({
   layout: 'default',
 });
@@ -117,4 +115,60 @@ const missions = [
   'Membangun kemitraan jangka panjang dengan pelanggan',
   'Berkontribusi pada pertumbuhan ekonomi lokal',
 ];
+
+// Fetch dynamic data from Supabase
+const { supabase } = useSupabase()
+const companyStats = ref<any[]>([])
+const teamMembers = ref<any[]>([])
+const companyValues = ref<any[]>([])
+const loading = ref(true)
+
+onMounted(async () => {
+  try {
+    loading.value = true
+    
+    // Calculate real company stats
+    const { count: productCount } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'active')
+    
+    const { count: partnerCount } = await supabase
+      .from('inquiries')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'converted')
+    
+    const { count: areaCount } = await supabase
+      .from('distribution_areas')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+    
+    const { count: brandCount } = await supabase
+      .from('brands')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+    
+    companyStats.value = [
+      { id: '1', label: 'Produk Tersedia', value: productCount || 50, suffix: '+', icon: 'inventory_2' },
+      { id: '2', label: 'Mitra Bisnis', value: partnerCount || 200, suffix: '+', icon: 'handshake' },
+      { id: '3', label: 'Kota Distribusi', value: areaCount || 15, suffix: '+', icon: 'location_city' },
+      { id: '4', label: 'Brand Partner', value: brandCount || 10, suffix: '+', icon: 'stars' },
+    ]
+    
+    // Team Members & Values - static data (rarely changed)
+    const { teamMembers: staticTeam, companyValues: staticValues } = await import('~/data/content')
+    teamMembers.value = staticTeam
+    companyValues.value = staticValues
+    
+  } catch (error) {
+    console.error('Error fetching about page data:', error)
+    // Fallback to static data
+    const { companyStats: staticStats, teamMembers: staticTeam, companyValues: staticValues } = await import('~/data/content')
+    companyStats.value = staticStats
+    teamMembers.value = staticTeam
+    companyValues.value = staticValues
+  } finally {
+    loading.value = false
+  }
+})
 </script>

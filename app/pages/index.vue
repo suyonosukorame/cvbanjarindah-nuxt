@@ -140,18 +140,144 @@
 </template>
 
 <script setup lang="ts">
-import { products } from '~/data/products';
+import type { Product } from '~/types/product'
+
+// Static data that doesn't need to be in DB
 import { 
   features, 
   whyChooseUs, 
-  companyStats, 
-  clientBrands, 
-  testimonials, 
-  pricingPackages,
+  clientBrands,
   coverageAreas 
-} from '~/data/content';
+} from '~/data/content'
 
 definePageMeta({
   layout: 'default',
-});
+})
+
+// Fetch dynamic data from Supabase
+const { supabase } = useSupabase()
+const products = ref<Product[]>([])
+const companyStats = ref<any[]>([])
+const testimonials = ref<any[]>([])
+const pricingPackages = ref<any[]>([])
+const loading = ref(true)
+
+onMounted(async () => {
+  try {
+    loading.value = true
+    
+    // Fetch products (active only, featured first)
+    const { data: productsData } = await supabase
+      .from('products')
+      .select('*')
+      .eq('status', 'active')
+      .order('is_featured', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(6)
+    
+    if (productsData) {
+      products.value = productsData.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        category: 'Produk', // Simplified for homepage
+        image: item.image_url || 'https://images.unsplash.com/photo-1584556326561-c8746083993b?w=400&h=300&fit=crop',
+        featured: item.is_featured || false,
+        price: item.price,
+        stock: item.stock,
+      }))
+    }
+    
+    // Fetch testimonials (active only)
+    const { data: testimonialsData } = await supabase
+      .from('testimonials')
+      .select('*')
+      .eq('is_active', true)
+      .order('is_featured', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(6)
+    
+    if (testimonialsData) {
+      testimonials.value = testimonialsData.map((item: any) => ({
+        id: item.id,
+        name: item.customer_name,
+        company: item.customer_company || '',
+        avatar: item.customer_avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.customer_name),
+        rating: item.rating || 5,
+        text: item.testimonial,
+      }))
+    }
+    
+    // Fetch pricing plans (active only)
+    const { data: pricingData } = await supabase
+      .from('pricing_plans')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+    
+    if (pricingData) {
+      pricingPackages.value = pricingData.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description || '',
+        price: item.price ? `Rp ${item.price.toLocaleString('id-ID')}` : 'Hubungi Kami',
+        minOrder: item.min_order || null,
+        features: item.features || [],
+        highlighted: item.is_popular || false,
+        discount: item.discount_percentage || null,
+      }))
+    }
+    
+    // Calculate company stats from real data
+    const { count: productCount } = await supabase
+      .from('products')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'active')
+    
+    const { count: inquiryCount } = await supabase
+      .from('inquiries')
+      .select('*', { count: 'exact', head: true })
+    
+    const { count: areaCount } = await supabase
+      .from('distribution_areas')
+      .select('*', { count: 'exact', head: true })
+      .eq('is_active', true)
+    
+    companyStats.value = [
+      { id: '1', label: 'Produk Tersedia', value: productCount || 50, suffix: '+', icon: 'inventory_2' },
+      { id: '2', label: 'Mitra Aktif', value: inquiryCount || 200, suffix: '+', icon: 'handshake' },
+      { id: '3', label: 'Kota Terjangkau', value: areaCount || 15, suffix: '+', icon: 'location_city' },
+      { id: '4', label: 'Tahun Pengalaman', value: new Date().getFullYear() - 2010, suffix: '', icon: 'military_tech' },
+    ]
+    
+    // Fallback to static data if database is empty
+    if (products.value.length === 0) {
+      const { products: staticProducts } = await import('~/data/products')
+      products.value = staticProducts.slice(0, 6)
+    }
+    
+    if (testimonials.value.length === 0) {
+      const { testimonials: staticTestimonials } = await import('~/data/content')
+      testimonials.value = staticTestimonials
+    }
+    
+    if (pricingPackages.value.length === 0) {
+      const { pricingPackages: staticPricing } = await import('~/data/content')
+      pricingPackages.value = staticPricing
+    }
+    
+  } catch (error) {
+    console.error('Error fetching homepage data:', error)
+    // Fallback to all static data
+    const { products: staticProducts } = await import('~/data/products')
+    const { companyStats: staticStats, testimonials: staticTestimonials, pricingPackages: staticPricing } = await import('~/data/content')
+    
+    products.value = staticProducts.slice(0, 6)
+    companyStats.value = staticStats
+    testimonials.value = staticTestimonials
+    pricingPackages.value = staticPricing
+  } finally {
+    loading.value = false
+  }
+})
 </script>
