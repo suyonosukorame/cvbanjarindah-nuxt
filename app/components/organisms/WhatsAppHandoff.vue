@@ -1,19 +1,18 @@
 <template>
-  <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-t border-green-200 p-4">
-    <div class="flex items-center gap-3 mb-3">
-      <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shrink-0">
-        <span class="material-symbols-outlined text-white">chat</span>
-      </div>
-      <div class="flex-1">
-        <h4 class="font-bold text-sm text-slate-900">Butuh bantuan langsung?</h4>
-        <p class="text-xs text-slate-600">Tim kami siap membantu via WhatsApp</p>
-      </div>
-    </div>
-    
+  <MoleculesCollapsibleCard
+    icon="chat"
+    collapsed-title="Butuh bantuan langsung?"
+    collapsed-subtitle="Chat via WhatsApp • ~5 menit"
+    expanded-title="Butuh bantuan langsung?"
+    expanded-subtitle="Tim kami siap membantu via WhatsApp"
+    variant="green"
+    :default-expanded="false"
+  >
+    <!-- WhatsApp CTA Button -->
     <a
       :href="whatsappUrl"
       target="_blank"
-      class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors active:scale-95"
+      class="flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors active:scale-95 shadow-sm"
     >
       <span class="material-symbols-outlined text-xl">send</span>
       <span>Chat via WhatsApp</span>
@@ -22,7 +21,7 @@
     <p class="text-center text-xs text-slate-500 mt-2">
       Response time: ~5 menit
     </p>
-  </div>
+  </MoleculesCollapsibleCard>
 </template>
 
 <script setup lang="ts">

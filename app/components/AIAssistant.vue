@@ -59,9 +59,9 @@ const unreadCount = ref(0);
 
 const chatWindowClasses = computed(() => {
   return [
-    // Mobile (< 768px): 70% width, 55vh height, positioned right, above AI button
+    // Mobile (< 768px): 85% width, 70vh height, positioned right, above AI button
     'bottom-[108px] right-4',  // 108px = 96px (button bottom-24) + 12px gap
-    'w-[70vw] h-[55vh]',
+    'w-[85vw] h-[70vh]',
     // Tablet & Desktop (>= 768px): Fixed bottom-right, standard size
     'md:bottom-4',
     'md:w-[420px] md:h-[680px] md:max-h-[85vh]',
