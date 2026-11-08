@@ -2,18 +2,9 @@
   <OrganismsResponsiveGridContainer
     :is-empty="products.length === 0"
     empty-message="Tidak ada produk di kategori ini"
-    :columns="{ mobile: 2, tablet: 3, desktop: 4 }"
+    :columns="gridColumnSettings"
     :gap="{ mobile: 'gap-3', tablet: 'gap-4', desktop: 'gap-6' }"
   >
-    <!-- Filters Slot -->
-    <template #filters>
-      <OrganismsGridFilters
-        :model-value="selectedCategory"
-        :items="filterItems"
-        @update:model-value="emit('update:selectedCategory', $event)"
-      />
-    </template>
-
     <!-- Products Grid Items -->
     <MoleculesProductCard
       v-for="product in products"
@@ -30,20 +21,17 @@ interface Props {
   products: Product[]
   categories: string[]
   selectedCategory: string
-}
-
-interface Emits {
-  (e: 'update:selectedCategory', value: string): void
+  gridColumns?: number
 }
 
 const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
 
-// Convert categories to filter items format
-const filterItems = computed(() => {
-  return props.categories.map(category => ({
-    label: category,
-    value: category
-  }))
+const gridColumnSettings = computed(() => {
+  const cols = props.gridColumns || 2
+  return {
+    mobile: Math.min(cols, 2),
+    tablet: Math.min(cols + 1, 3),
+    desktop: cols
+  }
 })
 </script>
