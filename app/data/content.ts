@@ -58,19 +58,19 @@ export const teamMembers: TeamMember[] = [
     id: '1',
     name: 'Tim Distribusi',
     role: 'Professional & Berpengalaman',
-    image: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=200&h=200&fit=crop',
   },
   {
     id: '2',
     name: 'Customer Service',
     role: 'Siap Melayani 24/7',
-    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=200&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=200&h=200&fit=crop',
   },
   {
     id: '3',
     name: 'Manajemen',
     role: 'Berpengalaman Puluhan Tahun',
-    image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200&h=200&fit=crop',
+    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&h=200&fit=crop',
   },
 ];
 
