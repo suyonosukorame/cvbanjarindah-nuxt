@@ -89,7 +89,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  title: 'Asisten Indah',
+  title: 'Asisten BI',
   status: 'Online',
 });
 
@@ -102,7 +102,7 @@ const emit = defineEmits<{
 const messages = ref<Message[]>([
   {
     role: 'ai',
-    text: 'Halo! Saya **Asisten Indah** dari CV Banjar Indah. Ada yang bisa saya bantu?\n\nAnda bisa bertanya tentang:\n• Produk & stok\n• Harga grosir\n• Area distribusi\n• Cara jadi mitra',
+    text: 'Halo! Saya **Asisten BI** dari CV Banjar Indah. Ada yang bisa saya bantu?\n\nAnda bisa bertanya tentang:\n• Produk & stok\n• Harga grosir\n• Area distribusi\n• Cara jadi mitra',
     timestamp: new Date(),
   },
 ]);

@@ -47,7 +47,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  title: 'Asisten Indah',
+  title: 'Asisten BI',
   status: 'Online',
   avatarInitials: 'AI',
   showMinimize: true,
