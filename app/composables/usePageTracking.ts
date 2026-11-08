@@ -4,7 +4,7 @@
  */
 
 export function usePageTracking() {
-  const supabase = useSupabase()
+  const { supabase } = useSupabase()
   const route = useRoute()
   const router = useRouter()
   
