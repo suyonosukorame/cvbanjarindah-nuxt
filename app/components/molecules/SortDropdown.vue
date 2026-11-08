@@ -78,7 +78,7 @@ interface Emits {
   (e: 'update:modelValue', value: string): void
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const isOpen = ref(false)
