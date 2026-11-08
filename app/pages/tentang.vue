@@ -11,12 +11,11 @@
     <!-- About Content -->
     <section class="py-16 max-w-7xl mx-auto px-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mb-16">
-        <AtomsImage
-          src="https://images.unsplash.com/photo-1556761175-b413da4baf72?w=600&h=800&fit=crop"
-          alt="Our Team"
-          class="h-96"
-          rounded="xl"
-          :hover="false"
+        <img
+          :src="corporateVisionFlyer"
+          alt="Visi dan misi CV Banjar Indah"
+          class="h-auto w-full rounded-xl"
+          loading="lazy"
         />
         
         <div>
@@ -115,6 +114,8 @@ const missions = [
   'Membangun kemitraan jangka panjang dengan pelanggan',
   'Berkontribusi pada pertumbuhan ekonomi lokal',
 ];
+
+const corporateVisionFlyer = '/CV%20Banjar%20Indah%20Corporate%20Vision%20Flyer.webp'
 
 // Fetch dynamic data from Supabase
 const { supabase } = useSupabase()
