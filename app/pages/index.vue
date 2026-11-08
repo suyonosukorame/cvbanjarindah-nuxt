@@ -141,13 +141,17 @@
 
 <script setup lang="ts">
 import type { Product } from '~/types/product'
+import { products as staticProducts } from '~/data/products'
 
 // Static data that doesn't need to be in DB
 import { 
   features, 
   whyChooseUs, 
+  companyStats as staticCompanyStats,
   clientBrands,
-  coverageAreas 
+  testimonials as staticTestimonials,
+  pricingPackages as staticPricingPackages,
+  coverageAreas,
 } from '~/data/content'
 
 definePageMeta({
@@ -156,10 +160,10 @@ definePageMeta({
 
 // Fetch dynamic data from Supabase
 const { supabase } = useSupabase()
-const products = ref<Product[]>([])
-const companyStats = ref<any[]>([])
-const testimonials = ref<any[]>([])
-const pricingPackages = ref<any[]>([])
+const products = ref<Product[]>(staticProducts.slice(0, 6))
+const companyStats = ref(staticCompanyStats)
+const testimonials = ref(staticTestimonials)
+const pricingPackages = ref(staticPricingPackages)
 const loading = ref(true)
 
 onMounted(async () => {
@@ -252,30 +256,24 @@ onMounted(async () => {
     
     // Fallback to static data if database is empty
     if (products.value.length === 0) {
-      const { products: staticProducts } = await import('~/data/products')
       products.value = staticProducts.slice(0, 6)
     }
     
     if (testimonials.value.length === 0) {
-      const { testimonials: staticTestimonials } = await import('~/data/content')
       testimonials.value = staticTestimonials
     }
     
     if (pricingPackages.value.length === 0) {
-      const { pricingPackages: staticPricing } = await import('~/data/content')
-      pricingPackages.value = staticPricing
+      pricingPackages.value = staticPricingPackages
     }
     
   } catch (error) {
     console.error('Error fetching homepage data:', error)
     // Fallback to all static data
-    const { products: staticProducts } = await import('~/data/products')
-    const { companyStats: staticStats, testimonials: staticTestimonials, pricingPackages: staticPricing } = await import('~/data/content')
-    
     products.value = staticProducts.slice(0, 6)
-    companyStats.value = staticStats
+    companyStats.value = staticCompanyStats
     testimonials.value = staticTestimonials
-    pricingPackages.value = staticPricing
+    pricingPackages.value = staticPricingPackages
   } finally {
     loading.value = false
   }
