@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Tracking</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <h1>Test Page Tracking</h1>
+  <button onclick="testTracking()">Test Insert</button>
+  <div id="result"></div>
+  
+  <script>
+    const SUPABASE_URL = 'https://husyookxqozeowihrgbx.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_lt3dukzKo7-ByZakbmMjuQ_bychjP7R';
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    async function testTracking() {
+      const result = document.getElementById('result');
+      result.innerHTML = 'Testing...';
+      
+      try {
+        // Test 1: Insert page visit
+        const visitorId = crypto.randomUUID();
+        const sessionId = crypto.randomUUID();
+        
+        console.log('Test 1: Inserting page visit...');
+        const { data: visitData, error: visitError } = await supabase
+          .from('page_visits')
+          .insert({
+            page_url: '/test',
+            page_title: 'Test Page',
+            session_id: sessionId,
+            device_type: 'desktop',
+            browser: 'test',
+            os: 'test'
+          })
+          .select();
+        
+        if (visitError) {
+          result.innerHTML = `<p style="color: red">Visit Error: ${visitError.message}</p>`;
+          console.error('Visit error:', visitError);
+          return;
+        }
+        
+        console.log('Visit inserted:', visitData);
+        
+        // Test 2: Call upsert_visitor function
+        console.log('Test 2: Calling upsert_visitor...');
+        const { data: visitorData, error: visitorError } = await supabase
+          .rpc('upsert_visitor', {
+            p_visitor_id: visitorId
+          });
+        
+        if (visitorError) {
+          result.innerHTML = `<p style="color: red">Visitor Error: ${visitorError.message}</p>`;
+          console.error('Visitor error:', visitorError);
+          return;
+        }
+        
+        console.log('Visitor upserted:', visitorData);
+        
+        // Test 3: Count records
+        console.log('Test 3: Counting records...');
+        const { count: visitCount } = await supabase
+          .from('page_visits')
+          .select('*', { count: 'exact', head: true });
+        
+        const { count: visitorCount } = await supabase
+          .from('unique_visitors')
+          .select('*', { count: 'exact', head: true });
+        
+        result.innerHTML = `
+          <p style="color: green">✅ Success!</p>
+          <p>Visits: ${visitCount}</p>
+          <p>Visitors: ${visitorCount}</p>
+        `;
+        
+      } catch (error) {
+        result.innerHTML = `<p style="color: red">Error: ${error.message}</p>`;
+        console.error('Test error:', error);
+      }
+    }
+  </script>
+</body>
+</html>

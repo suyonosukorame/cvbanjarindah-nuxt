@@ -125,7 +125,7 @@ onMounted(async () => {
 
 async function fetchStats() {
   try {
-    const supabase = useSupabase()
+    const { supabase } = useSupabase()
     
     // Fetch visit count (total page views)
     const { count: visitCount } = await supabase
