@@ -15,6 +15,7 @@ const { startTracking } = usePageTracking()
 
 // Start tracking when app mounts (client-side only)
 onMounted(() => {
+  console.log('App mounted, starting page tracking...')
   startTracking()
 })
 </script>

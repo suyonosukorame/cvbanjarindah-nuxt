@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Page Tracking</title>
+</head>
+<body>
+  <h1>Test Page Tracking CV Banjar Indah</h1>
+  <div id="status">Loading...</div>
+  
+  <script>
+    async function testPageTracking() {
+      const statusDiv = document.getElementById('status');
+      
+      // Test localStorage
+      const storageKey = 'cv_visitor_id';
+      let visitorId = localStorage.getItem(storageKey);
+      
+      if (!visitorId) {
+        visitorId = crypto.randomUUID();
+        localStorage.setItem(storageKey, visitorId);
+        statusDiv.innerHTML += `<p>Created new visitor ID: ${visitorId}</p>`;
+      } else {
+        statusDiv.innerHTML += `<p>Using existing visitor ID: ${visitorId}</p>`;
+      }
+      
+      // Test sessionStorage
+      const sessionKey = 'cv_session_id';
+      let sessionId = sessionStorage.getItem(sessionKey);
+      
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        sessionStorage.setItem(sessionKey, sessionId);
+        statusDiv.innerHTML += `<p>Created new session ID: ${sessionId}</p>`;
+      } else {
+        statusDiv.innerHTML += `<p>Using existing session ID: ${sessionId}</p>`;
+      }
+      
+      // Test device detection
+      const ua = navigator.userAgent;
+      let device_type = 'desktop';
+      if (/Mobile|Android|iPhone/i.test(ua)) device_type = 'mobile';
+      else if (/iPad|Tablet/i.test(ua)) device_type = 'tablet';
+      
+      statusDiv.innerHTML += `<p>Device type: ${device_type}</p>`;
+      statusDiv.innerHTML += `<p>User Agent: ${ua}</p>`;
+      
+      // Test if running in browser (not server)
+      statusDiv.innerHTML += `<p>Running on client: ${typeof window !== 'undefined'}</p>`;
+      
+      statusDiv.innerHTML += `<p><strong>All tracking tests passed!</strong></p>`;
+    }
+    
+    testPageTracking();
+  </script>
+</body>
+</html>

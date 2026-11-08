@@ -69,15 +69,28 @@ export function usePageTracking() {
   
   // Track page visit
   const trackPageVisit = async () => {
-    if (process.server) return
+    if (process.server) {
+      console.log('trackPageVisit called on server side - skipping')
+      return
+    }
+    
+    console.log('trackPageVisit started on client side')
     
     try {
       const visitorId = getVisitorId()
       const sessionId = getSessionId()
       const deviceInfo = getDeviceInfo()
       
+      console.log('Tracking info:', {
+        visitorId,
+        sessionId,
+        deviceInfo,
+        pageUrl: route.path,
+        pageTitle: document.title
+      })
+      
       // Insert page visit
-      const { error: visitError } = await supabase
+      const { error: visitError, data: visitData } = await supabase
         .from('page_visits')
         .insert({
           page_url: route.path,
@@ -87,9 +100,17 @@ export function usePageTracking() {
           session_id: sessionId,
           ...deviceInfo,
         })
+        .select()
       
       if (visitError) {
         console.error('Error tracking visit:', visitError)
+        console.error('Visit error details:', {
+          message: visitError.message,
+          details: visitError.details,
+          hint: visitError.hint
+        })
+      } else {
+        console.log('Visit tracked successfully:', visitData)
       }
       
       // Upsert unique visitor
@@ -100,6 +121,13 @@ export function usePageTracking() {
       
       if (visitorError) {
         console.error('Error tracking visitor:', visitorError)
+        console.error('Visitor error details:', {
+          message: visitorError.message,
+          details: visitorError.details,
+          hint: visitorError.hint
+        })
+      } else {
+        console.log('Visitor tracked successfully')
       }
       
     } catch (error) {
