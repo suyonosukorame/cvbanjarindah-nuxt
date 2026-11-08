@@ -17,7 +17,7 @@
           role="dialog"
           aria-modal="true"
           aria-labelledby="product-filter-title"
-          class="filter-panel absolute inset-x-0 bottom-0 flex max-h-[85dvh] flex-col rounded-t-2xl bg-white shadow-2xl dark:bg-gray-900 sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-screen sm:w-[26rem] sm:rounded-none"
+          class="filter-panel absolute inset-y-0 right-0 flex h-dvh w-[90vw] max-w-[360px] flex-col bg-white shadow-2xl dark:bg-gray-900 sm:w-[26rem] sm:max-w-none sm:rounded-l-2xl"
         >
           <header class="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-5 dark:border-gray-700">
             <h2 id="product-filter-title" class="text-lg font-bold text-gray-900 dark:text-white">
@@ -39,14 +39,22 @@
             </button>
           </header>
 
-          <div class="flex-1 space-y-7 overflow-y-auto overscroll-contain p-6">
-            <section>
-              <h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">Kategori</h3>
-              <div class="space-y-3">
+          <div class="flex-1 space-y-3 overflow-y-auto overscroll-contain p-4 sm:p-6">
+            <details class="rounded-xl border border-gray-200 dark:border-gray-700">
+              <summary class="group flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">Kategori</span>
+                <span class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  {{ categorySummary }}
+                  <svg class="h-4 w-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+                  </svg>
+                </span>
+              </summary>
+              <div class="space-y-1 border-t border-gray-200 p-3 dark:border-gray-700">
                 <label
                   v-for="category in categories"
                   :key="category"
-                  class="group flex cursor-pointer items-center gap-3"
+                  class="group flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-1"
                 >
                   <input
                     type="checkbox"
@@ -59,24 +67,29 @@
                   </span>
                 </label>
               </div>
-            </section>
+            </details>
 
-            <section v-if="brands.length > 0">
-              <div class="mb-3 flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Brand</h3>
-                <span class="text-xs text-gray-500 dark:text-gray-400">
-                  {{ draftFilters.brands.length }} dipilih
+            <details v-if="brands.length > 0" class="rounded-xl border border-gray-200 dark:border-gray-700">
+              <summary class="group flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 [&::-webkit-details-marker]:hidden">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">Brand</span>
+                <span class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  {{ brandSummary }}
+                  <svg class="h-4 w-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 9-7 7-7-7" />
+                  </svg>
                 </span>
+              </summary>
+              <div class="border-t border-gray-200 p-3 dark:border-gray-700">
+                <MoleculesBrandFilterList
+                  :brands="brands"
+                  :selected-ids="draftFilters.brands"
+                  @toggle="toggleBrand"
+                />
               </div>
-              <MoleculesBrandFilterList
-                :brands="brands"
-                :selected-ids="draftFilters.brands"
-                @toggle="toggleBrand"
-              />
-            </section>
+            </details>
           </div>
 
-          <footer class="flex shrink-0 gap-3 border-t border-gray-200 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-gray-700 dark:bg-gray-900 sm:p-6">
+          <footer class="flex shrink-0 gap-3 border-t border-gray-200 bg-white p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-gray-700 dark:bg-gray-900 sm:p-6">
             <button
               type="button"
               @click="clearFilters"
@@ -124,6 +137,15 @@ const draftFilters = ref<FilterState>({
   brands: [],
 })
 let previousBodyOverflow: string | null = null
+
+const categorySummary = computed(() => {
+  const selectedCount = draftFilters.value.categories.filter(category => category !== 'Semua').length
+  return selectedCount > 0 ? `${selectedCount} dipilih` : 'Semua'
+})
+
+const brandSummary = computed(() => draftFilters.value.brands.length > 0
+  ? `${draftFilters.value.brands.length} dipilih`
+  : `${props.brands.length} tersedia`)
 
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
@@ -206,13 +228,6 @@ onUnmounted(restoreBodyOverflow)
 
 .filter-enter-from .filter-panel,
 .filter-leave-to .filter-panel {
-  transform: translateY(100%);
-}
-
-@media (min-width: 640px) {
-  .filter-enter-from .filter-panel,
-  .filter-leave-to .filter-panel {
-    transform: translateX(100%);
-  }
+  transform: translateX(100%);
 }
 </style>

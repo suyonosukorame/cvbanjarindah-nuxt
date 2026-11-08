@@ -12,7 +12,7 @@
       <label
         v-for="brand in filteredBrands"
         :key="brand.id"
-        class="group flex cursor-pointer items-center gap-3"
+        class="group flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-1"
       >
         <input
           type="checkbox"
