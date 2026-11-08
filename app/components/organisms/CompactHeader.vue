@@ -109,7 +109,7 @@
 
     <!-- Filter Drawer Modal -->
     <Transition name="slide-in">
-      <div v-if="showFilterDrawer" class="fixed inset-0 z-50">
+      <div v-if="showFilterDrawer" class="fixed inset-0 z-[60]">
         <!-- Backdrop -->
         <div
           @click="showFilterDrawer = false"
@@ -117,12 +117,13 @@
         />
 
         <!-- Drawer -->
-        <div class="absolute bottom-0 right-0 w-full sm:w-96 bg-white dark:bg-gray-900 rounded-t-2xl sm:rounded-l-2xl shadow-2xl max-h-[80vh] overflow-y-auto">
+        <div class="absolute bottom-0 right-0 w-full overflow-y-auto rounded-t-2xl bg-white shadow-2xl dark:bg-gray-900 max-h-[80vh] sm:w-96 sm:rounded-l-2xl">
           <div class="p-6">
-            <div class="flex items-center justify-between mb-6">
+            <div class="mb-6 flex items-center justify-between">
               <h2 class="text-lg font-bold text-gray-900 dark:text-white">Filter Produk</h2>
               <button
                 @click="showFilterDrawer = false"
+                aria-label="Tutup filter"
                 class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
               >
                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -158,7 +159,7 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex gap-3 border-t border-gray-200 pt-6 dark:border-gray-700">
               <button
                 @click="clearFilters"
                 class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
@@ -206,6 +207,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 
 const showFilterDrawer = ref(false)
+const previousBodyOverflow = ref<string | null>(null)
 const isSticky = ref(false)
 const isTitleCollapsed = ref(false)
 const headerHeight = ref(0)
@@ -265,6 +267,18 @@ const clearFilters = () => {
   })
 }
 
+watch(showFilterDrawer, (isOpen) => {
+  if (!import.meta.client) return
+
+  if (isOpen) {
+    previousBodyOverflow.value = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+  } else if (previousBodyOverflow.value !== null) {
+    document.body.style.overflow = previousBodyOverflow.value
+    previousBodyOverflow.value = null
+  }
+})
+
 onMounted(() => {
   headerElement.value = document.querySelector('.sticky-header-wrapper')
   
@@ -278,6 +292,12 @@ onMounted(() => {
 
   if (headerElement.value) {
     observer.observe(headerElement.value)
+  }
+})
+
+onUnmounted(() => {
+  if (previousBodyOverflow.value !== null) {
+    document.body.style.overflow = previousBodyOverflow.value
   }
 })
 </script>
