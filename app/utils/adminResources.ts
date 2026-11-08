@@ -138,6 +138,7 @@ export const adminNavigation = [
   { label: 'Pesan masuk', to: '/admin/inquiries', icon: 'mail' },
   { label: 'Testimoni', to: '/admin/testimonials', icon: 'reviews' },
   { label: 'Paket harga', to: '/admin/pricing', icon: 'payments' },
+  { label: 'Pengguna', to: '/admin/users', icon: 'group' },
 ];
 
 export { activeOptions };
