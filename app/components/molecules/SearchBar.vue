@@ -4,8 +4,9 @@
       :value="modelValue"
       @input="emit('update:modelValue', $event.target.value)"
       type="text"
-      placeholder="Cari produk..."
-      class="w-full px-4 py-2.5 pl-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
+      placeholder="Cari nama atau deskripsi produk..."
+      aria-label="Cari produk"
+      class="w-full px-4 py-2.5 pl-10 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition-all"
     />
     <svg
       class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"
@@ -47,5 +48,5 @@ interface Emits {
 }
 
 defineProps<Props>()
-defineEmits<Emits>()
+const emit = defineEmits<Emits>()
 </script>

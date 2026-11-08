@@ -111,6 +111,15 @@ CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category_id)
 CREATE INDEX IF NOT EXISTS idx_products_brand ON public.products(brand_id);
 CREATE INDEX IF NOT EXISTS idx_products_status ON public.products(status);
 CREATE INDEX IF NOT EXISTS idx_products_featured ON public.products(is_featured);
+CREATE INDEX IF NOT EXISTS idx_products_active_created_at
+  ON public.products(created_at DESC)
+  WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_products_active_category_created_at
+  ON public.products(category_id, created_at DESC)
+  WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_products_active_brand_created_at
+  ON public.products(brand_id, created_at DESC)
+  WHERE status = 'active';
 CREATE INDEX IF NOT EXISTS idx_categories_active ON public.categories(is_active);
 CREATE INDEX IF NOT EXISTS idx_brands_active ON public.brands(is_active);
 CREATE INDEX IF NOT EXISTS idx_inquiries_status ON public.inquiries(status);

@@ -85,13 +85,13 @@
         <!-- Active Filters Display -->
         <div v-if="hasActiveFilters" class="flex flex-wrap gap-2">
           <div
-            v-for="(item, index) in activeFiltersList"
-            :key="index"
+            v-for="item in activeFiltersList"
+            :key="`${item.type}-${item.value}`"
             class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium"
           >
-            <span>{{ item }}</span>
+            <span>{{ item.label }}</span>
             <button
-              @click="removeFilter(index)"
+              @click="removeFilter(item)"
               class="hover:text-blue-900 dark:hover:text-blue-100 transition-colors"
             >
               <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -107,88 +107,30 @@
       </div>
     </div>
 
-    <!-- Filter Drawer Modal -->
-    <Transition name="slide-in">
-      <div v-if="showFilterDrawer" class="fixed inset-0 z-[60]">
-        <!-- Backdrop -->
-        <div
-          @click="showFilterDrawer = false"
-          class="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        />
-
-        <!-- Drawer -->
-        <div class="absolute bottom-0 right-0 w-full overflow-y-auto rounded-t-2xl bg-white shadow-2xl dark:bg-gray-900 max-h-[80vh] sm:w-96 sm:rounded-l-2xl">
-          <div class="p-6">
-            <div class="mb-6 flex items-center justify-between">
-              <h2 class="text-lg font-bold text-gray-900 dark:text-white">Filter Produk</h2>
-              <button
-                @click="showFilterDrawer = false"
-                aria-label="Tutup filter"
-                class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-              >
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    fill-rule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <!-- Category Filters -->
-            <div class="mb-6">
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-white mb-3">Kategori</h3>
-              <div class="space-y-2">
-                <label
-                  v-for="category in categories"
-                  :key="category"
-                  class="flex items-center gap-3 cursor-pointer group"
-                >
-                  <input
-                    type="checkbox"
-                    :checked="selectedFilters.categories.includes(category)"
-                    @change="toggleFilter('categories', category)"
-                    class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                  <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">
-                    {{ category }}
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex gap-3 border-t border-gray-200 pt-6 dark:border-gray-700">
-              <button
-                @click="clearFilters"
-                class="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
-              >
-                Hapus Semua
-              </button>
-              <button
-                @click="showFilterDrawer = false"
-                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Terapkan
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <OrganismsProductFilterDrawer
+      :model-value="showFilterDrawer"
+      :categories="categories"
+      :brands="brands"
+      :selected-filters="normalizedSelectedFilters"
+      @update:model-value="showFilterDrawer = $event"
+      @update:selected-filters="emit('update:selectedFilters', $event)"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
+import type { ProductFilterOption } from '~/types/product'
+
 interface Props {
   title: string
   subtitle: string
   categories: string[]
+  brands?: ProductFilterOption[]
   searchQuery: string
   sortBy: string
   selectedFilters: {
     categories: string[]
+    brands?: string[]
   }
   gridColumns: number
   gridMaxColumns?: number
@@ -197,87 +139,59 @@ interface Props {
 interface Emits {
   (e: 'update:searchQuery', value: string): void
   (e: 'update:sortBy', value: string): void
-  (e: 'update:selectedFilters', value: Props['selectedFilters']): void
+  (e: 'update:selectedFilters', value: { categories: string[]; brands: string[] }): void
   (e: 'update:gridColumns', value: number): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  brands: () => [],
   gridMaxColumns: 3
 })
 const emit = defineEmits<Emits>()
 
 const showFilterDrawer = ref(false)
-const previousBodyOverflow = ref<string | null>(null)
 const isSticky = ref(false)
 const isTitleCollapsed = ref(false)
 const headerHeight = ref(0)
 const headerElement = ref<HTMLElement | null>(null)
 
-const hasActiveFilters = computed(() => {
-  return props.selectedFilters.categories.some(cat => cat !== 'Semua' && props.categories.includes(cat))
-})
+const normalizedSelectedFilters = computed(() => ({
+  categories: props.selectedFilters.categories,
+  brands: props.selectedFilters.brands ?? [],
+}))
 
-const filterBadgeCount = computed(() => {
-  return props.selectedFilters.categories.filter(cat => cat !== 'Semua').length
-})
+const activeFiltersList = computed(() => [
+  ...props.selectedFilters.categories
+    .filter(category => category !== 'Semua' && props.categories.includes(category))
+    .map(value => ({ type: 'categories' as const, value, label: value })),
+  ...(props.selectedFilters.brands ?? []).map(value => ({
+    type: 'brands' as const,
+    value,
+    label: props.brands.find(brand => brand.id === value)?.name ?? value,
+  })),
+])
 
-const activeFiltersList = computed(() => {
-  return props.selectedFilters.categories.filter(cat => cat !== 'Semua')
-})
+const hasActiveFilters = computed(() => activeFiltersList.value.length > 0)
+const filterBadgeCount = computed(() => activeFiltersList.value.length)
 
-const toggleFilter = (type: 'categories', value: string) => {
+const removeFilter = (filter: { type: 'categories' | 'brands'; value: string }) => {
   const newFilters = { ...props.selectedFilters }
-  const index = newFilters[type].indexOf(value)
-  
-  if (index > -1) {
-    newFilters[type].splice(index, 1)
+
+  if (filter.type === 'categories') {
+    newFilters.categories = newFilters.categories.filter(value => value !== filter.value)
   } else {
-    // If selecting a specific category, remove 'Semua'
-    if (value !== 'Semua') {
-      const semuaIndex = newFilters[type].indexOf('Semua')
-      if (semuaIndex > -1) {
-        newFilters[type].splice(semuaIndex, 1)
-      }
-    }
-    newFilters[type].push(value)
+    newFilters.brands = (newFilters.brands ?? []).filter(value => value !== filter.value)
   }
 
-  // If no categories selected, default to 'Semua'
-  if (newFilters[type].length === 0) {
-    newFilters[type] = ['Semua']
-  }
-
-  emit('update:selectedFilters', newFilters)
-}
-
-const removeFilter = (index: number) => {
-  const newFilters = { ...props.selectedFilters }
-  newFilters.categories.splice(index, 1)
-  
   if (newFilters.categories.length === 0) {
     newFilters.categories = ['Semua']
   }
-  
-  emit('update:selectedFilters', newFilters)
-}
 
-const clearFilters = () => {
   emit('update:selectedFilters', {
-    categories: ['Semua']
+    categories: newFilters.categories,
+    brands: newFilters.brands ?? [],
   })
 }
-
-watch(showFilterDrawer, (isOpen) => {
-  if (!import.meta.client) return
-
-  if (isOpen) {
-    previousBodyOverflow.value = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-  } else if (previousBodyOverflow.value !== null) {
-    document.body.style.overflow = previousBodyOverflow.value
-    previousBodyOverflow.value = null
-  }
-})
 
 onMounted(() => {
   headerElement.value = document.querySelector('.sticky-header-wrapper')
@@ -295,47 +209,10 @@ onMounted(() => {
   }
 })
 
-onUnmounted(() => {
-  if (previousBodyOverflow.value !== null) {
-    document.body.style.overflow = previousBodyOverflow.value
-  }
-})
 </script>
 
 <style scoped>
 .sticky-header-wrapper {
   --header-height: 0px;
-}
-
-.slide-in-enter-active,
-.slide-in-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.slide-in-enter-active > div:last-child,
-.slide-in-leave-active > div:last-child {
-  transition: transform 0.3s ease;
-}
-
-.slide-in-enter-from,
-.slide-in-leave-to {
-  opacity: 0;
-}
-
-.slide-in-enter-from > div:last-child,
-.slide-in-leave-to > div:last-child {
-  transform: translateX(100%);
-}
-
-@media (max-width: 640px) {
-  .slide-in-enter-active > div:last-child,
-  .slide-in-leave-active > div:last-child {
-    transition: transform 0.3s ease;
-  }
-
-  .slide-in-enter-from > div:last-child,
-  .slide-in-leave-to > div:last-child {
-    transform: translateY(100%);
-  }
 }
 </style>

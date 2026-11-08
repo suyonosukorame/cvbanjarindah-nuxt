@@ -1,10 +1,10 @@
 <template>
   <div>
-    <!-- Smart Header with Search, Sort, Filter -->
     <OrganismsCompactHeader
       title="Produk Kami"
       subtitle="Jelajahi koleksi lengkap produk berkualitas dari CV Banjar Indah"
       :categories="categories"
+      :brands="brandOptions"
       :search-query="searchQuery"
       :sort-by="sortBy"
       :selected-filters="selectedFilters"
@@ -16,132 +16,246 @@
       @update:grid-columns="gridColumns = $event"
     />
 
-    <!-- Product Grid -->
     <div class="max-w-7xl mx-auto px-4 py-8">
-      <!-- Loading State -->
       <div v-if="loading" class="flex items-center justify-center py-20">
         <div class="text-center">
-          <div class="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div>
+          <div class="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
           <p class="text-slate-600">Memuat produk...</p>
         </div>
       </div>
 
-      <!-- Error State -->
-      <div v-else-if="error" class="text-center py-20">
-        <p class="text-red-600 mb-4">⚠️ {{ error }}</p>
-        <p class="text-slate-600">Menampilkan data cadangan...</p>
+      <div v-else-if="error" class="py-20 text-center">
+        <p class="mb-4 text-red-600">⚠️ {{ error }}</p>
+        <button
+          type="button"
+          class="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
+          @click="loadCatalog"
+        >
+          Coba lagi
+        </button>
       </div>
 
-      <!-- Products -->
-      <OrganismsProductGrid
-        v-else
-        :products="filteredAndSortedProducts"
-        :categories="categories"
-        :selected-category="selectedCategory"
-        :grid-columns="gridColumns"
-      />
+      <template v-else>
+        <p class="mb-5 text-sm text-slate-600 dark:text-slate-400" aria-live="polite">
+          Menampilkan {{ resultStart }}–{{ resultEnd }} dari {{ totalProducts }} produk
+        </p>
+
+        <OrganismsProductGrid
+          :products="products"
+          :categories="categories"
+          :selected-category="selectedCategory"
+          :grid-columns="gridColumns"
+        />
+
+        <OrganismsProductPagination
+          v-if="totalProducts > pageSize"
+          v-model:page="page"
+          :page-size="pageSize"
+          :total="totalProducts"
+          class="mt-8"
+        />
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Product } from '~/types/product'
+import type { Product, ProductFilterOption } from '~/types/product'
 
 definePageMeta({
   layout: 'default',
 })
 
-const categories = ['Semua', 'Tissue', 'Masker', 'Bayi']
-
-// Fetch products from Supabase
-const { supabase } = useSupabase()
-const allProducts = ref<Product[]>([])
+const pageSize = 24
+const categoriesData = ref<ProductFilterOption[]>([])
+const brandOptions = ref<ProductFilterOption[]>([])
+const products = ref<Product[]>([])
 const loading = ref(true)
 const error = ref<string | null>(null)
-const categoryMap = ref<Record<string, string>>({})
-
-// Fetch categories first to build mapping
-const fetchCategories = async () => {
-  try {
-    const { data, error: catError } = await supabase
-      .from('categories')
-      .select('id, name')
-    
-    if (!catError && data) {
-      categoryMap.value = data.reduce((acc: Record<string, string>, cat: any) => {
-        acc[cat.id] = cat.name
-        return acc
-      }, {})
-    }
-  } catch (err) {
-    console.error('Error fetching categories:', err)
-  }
-}
-
-// Fetch products on mount
-onMounted(async () => {
-  try {
-    loading.value = true
-    
-    // Fetch categories first
-    await fetchCategories()
-    
-    const { data, error: fetchError } = await supabase
-      .from('products')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-    
-    if (fetchError) {
-      console.error('Error fetching products:', fetchError)
-      error.value = fetchError.message
-      // Fallback to static data jika error
-      const { products: staticProducts } = await import('~/data/products')
-      allProducts.value = staticProducts
-    } else {
-      // Map Supabase data to Product type
-      allProducts.value = (data || []).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description || '',
-        category: getCategoryName(item.category_id),
-        image: item.image_url || 'https://images.unsplash.com/photo-1584556326561-c8746083993b?w=400&h=300&fit=crop',
-        featured: item.is_featured || false,
-        price: item.price,
-        stock: item.stock,
-      }))
-    }
-  } catch (err: any) {
-    console.error('Fetch error:', err)
-    error.value = err.message
-    // Fallback to static data
-    const { products: staticProducts } = await import('~/data/products')
-    allProducts.value = staticProducts
-  } finally {
-    loading.value = false
-  }
+const totalProducts = ref(0)
+const searchQuery = ref('')
+const sortBy = ref('newest')
+const page = ref(1)
+const gridColumns = ref(6)
+const selectedFilters = ref({
+  categories: ['Semua'],
+  brands: [] as string[],
 })
 
-// Helper function to map category_id to category name
-const getCategoryName = (categoryId: string | null): string => {
-  if (!categoryId) return 'Tissue'
-  return categoryMap.value[categoryId] || 'Tissue'
+const { supabase } = useSupabase()
+let latestRequestId = 0
+let searchDebounce: ReturnType<typeof setTimeout> | undefined
+
+const categories = computed(() => [
+  'Semua',
+  ...categoriesData.value.map(category => category.name),
+])
+
+const selectedCategory = computed(() => selectedFilters.value.categories[0] || 'Semua')
+const resultStart = computed(() => totalProducts.value === 0 ? 0 : (page.value - 1) * pageSize + 1)
+const resultEnd = computed(() => Math.min(page.value * pageSize, totalProducts.value))
+
+const loadFilterOptions = async () => {
+  const [categoryResult, brandResult] = await Promise.all([
+    supabase
+      .from('categories')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true }),
+    supabase
+      .from('brands')
+      .select('id, name')
+      .eq('is_active', true)
+      .order('name', { ascending: true }),
+  ])
+
+  if (categoryResult.error) throw categoryResult.error
+  if (brandResult.error) throw brandResult.error
+
+  categoriesData.value = categoryResult.data ?? []
+  brandOptions.value = brandResult.data ?? []
 }
 
-// Use filtering composable
-const {
-  searchQuery,
-  sortBy,
-  selectedFilters,
-  gridColumns,
-  filteredAndSortedProducts,
-} = useProductFiltering(allProducts, ref(categories))
+const loadProducts = async () => {
+  const requestId = ++latestRequestId
+  loading.value = true
+  error.value = null
 
-// Computed category filter
-const selectedCategory = computed(() => {
-  if (selectedFilters.value.categories.includes('Semua')) {
-    return 'Semua'
+  try {
+    let query = supabase
+      .from('products')
+      .select(
+        'id, name, description, image_url, price, stock, is_featured, created_at, category_id, brand_id',
+        { count: 'exact' },
+      )
+      .eq('status', 'active')
+
+    const searchTerm = searchQuery.value.trim()
+    if (searchTerm) {
+      const escapedSearchTerm = searchTerm.replace(/[\\"]/g, '\\$&')
+      query = query.or(
+        `name.ilike."%${escapedSearchTerm}%",description.ilike."%${escapedSearchTerm}%"`,
+      )
+    }
+
+    if (!selectedFilters.value.categories.includes('Semua')) {
+      const selectedCategoryIds = categoriesData.value
+        .filter(category => selectedFilters.value.categories.includes(category.name))
+        .map(category => category.id)
+
+      if (selectedCategoryIds.length === 0) {
+        products.value = []
+        totalProducts.value = 0
+        return
+      }
+
+      query = query.in('category_id', selectedCategoryIds)
+    }
+
+    if (selectedFilters.value.brands.length > 0) {
+      query = query.in('brand_id', selectedFilters.value.brands)
+    }
+
+    switch (sortBy.value) {
+      case 'name-asc':
+        query = query.order('name', { ascending: true })
+        break
+      case 'name-desc':
+        query = query.order('name', { ascending: false })
+        break
+      case 'price-asc':
+        query = query.order('price', { ascending: true, nullsFirst: false })
+        break
+      case 'price-desc':
+        query = query.order('price', { ascending: false, nullsFirst: false })
+        break
+      case 'newest':
+      default:
+        query = query.order('created_at', { ascending: false })
+        break
+    }
+
+    query = query.order('id', { ascending: true })
+
+    const from = (page.value - 1) * pageSize
+    const { data, error: queryError, count } = await query.range(from, from + pageSize - 1)
+
+    if (requestId !== latestRequestId) return
+    if (queryError) throw queryError
+
+    const resultCount = count ?? 0
+    const lastPage = Math.max(1, Math.ceil(resultCount / pageSize))
+    totalProducts.value = resultCount
+
+    if (page.value > lastPage) {
+      page.value = lastPage
+      return
+    }
+
+    products.value = (data ?? []).map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description || '',
+      category: categoriesData.value.find(category => category.id === item.category_id)?.name || 'Lainnya',
+      image: item.image_url || 'https://images.unsplash.com/photo-1584556326561-c8746083993b?w=400&h=300&fit=crop',
+      featured: item.is_featured || false,
+      price: item.price === null ? null : Number(item.price),
+      stock: item.stock,
+      brandId: item.brand_id,
+      brand: brandOptions.value.find(brand => brand.id === item.brand_id)?.name,
+      createdAt: item.created_at,
+    }))
+  } catch (fetchError) {
+    if (requestId !== latestRequestId) return
+    error.value = fetchError instanceof Error ? fetchError.message : 'Gagal memuat produk.'
+    products.value = []
+    totalProducts.value = 0
+  } finally {
+    if (requestId === latestRequestId) loading.value = false
   }
-  return selectedFilters.value.categories[0] || 'Semua'
+}
+
+const scheduleProductFetch = (delay = 0) => {
+  if (searchDebounce) clearTimeout(searchDebounce)
+  searchDebounce = setTimeout(() => {
+    void loadProducts()
+  }, delay)
+}
+
+const loadCatalog = async () => {
+  loading.value = true
+  error.value = null
+
+  try {
+    await loadFilterOptions()
+    await loadProducts()
+  } catch (fetchError) {
+    error.value = fetchError instanceof Error ? fetchError.message : 'Gagal memuat filter produk.'
+    loading.value = false
+  }
+}
+
+watch(searchQuery, () => {
+  if (page.value !== 1) page.value = 1
+  scheduleProductFetch(300)
+})
+
+watch([
+  sortBy,
+  () => selectedFilters.value.categories.join(','),
+  () => selectedFilters.value.brands.join(','),
+], () => {
+  if (page.value !== 1) page.value = 1
+  scheduleProductFetch()
+})
+
+watch(page, () => scheduleProductFetch())
+
+onMounted(loadCatalog)
+
+onUnmounted(() => {
+  if (searchDebounce) clearTimeout(searchDebounce)
+  latestRequestId += 1
 })
 </script>

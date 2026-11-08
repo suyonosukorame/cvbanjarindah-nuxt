@@ -11,6 +11,10 @@
       <AtomsBadge :color="categoryColor" class="mb-3">
         {{ product.category }}
       </AtomsBadge>
+
+      <p v-if="product.brand" class="mb-2 text-sm font-medium text-slate-500">
+        {{ product.brand }}
+      </p>
       
       <h3 class="font-bold text-lg mb-2 text-slate-900">
         {{ product.name }}
