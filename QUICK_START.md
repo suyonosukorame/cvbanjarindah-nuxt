@@ -193,6 +193,60 @@ Dark mode otomatis tersedia melalui:
 
 ---
 
+## ✨ OPSI 4: Smart Product Header Features
+
+### 🔍 Search Products
+
+Di halaman `/produk`, gunakan search bar untuk mencari produk:
+
+```
+- Ketik nama produk
+- Hasil update real-time
+- Click X untuk clear
+```
+
+### ⬇️ Sort Products
+
+Klik dropdown "Urutkan" untuk:
+
+```
+- Terbaru (default)
+- Nama A-Z
+- Nama Z-A
+- Harga Terendah
+- Harga Tertinggi
+```
+
+### 🔗 Filter by Category
+
+Klik tombol "Filter" untuk:
+
+```
+1. Buka filter drawer
+2. Pilih kategori (Tissue, Masker, Bayi)
+3. Klik "Terapkan"
+4. Aktif filters ditampilkan sebagai chips
+5. Click X di chip untuk remove filter
+```
+
+### 👁️ Toggle Grid View
+
+Klik tombol grid di kanan untuk:
+
+```
+- 2 kolom → 3 kolom
+- 3 kolom → 2 kolom
+```
+
+### 📱 Mobile Optimization
+
+- Header sticky saat scroll
+- Title collapses untuk save space
+- Filter drawer dari bawah
+- Touch-friendly buttons
+
+---
+
 ## ✨ Quick Tips
 
 1. **Auto-import**: Components & composables otomatis di-import
