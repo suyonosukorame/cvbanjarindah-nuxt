@@ -4,7 +4,7 @@
     <nav class="sticky top-0 z-40 border-b border-slate-200 bg-white">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Desktop Navigation -->
-        <div class="hidden md:flex justify-between items-center h-16">
+        <div class="flex justify-between items-center h-16">
           <!-- Logo/Brand -->
           <NuxtLink to="/admin" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
             <span class="material-symbols-outlined text-2xl text-primary">admin_panel_settings</span>
@@ -12,7 +12,7 @@
           </NuxtLink>
 
           <!-- Desktop Menu -->
-          <div class="flex items-center gap-8">
+          <div class="hidden md:flex items-center gap-8">
             <div class="flex items-center gap-6">
               <!-- Dashboard -->
               <NuxtLink
@@ -23,56 +23,50 @@
                 Dashboard
               </NuxtLink>
 
-              <!-- Resources Menu -->
-              <div class="relative group">
-                <button class="text-sm font-medium text-slate-700 hover:text-primary transition-colors flex items-center gap-2">
-                  <span>Resources</span>
-                  <span class="material-symbols-outlined text-base">expand_more</span>
-                </button>
-                <!-- Dropdown -->
-                <div class="absolute left-0 mt-0 w-48 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                  <NuxtLink
-                    to="/admin/kontrol"
-                    class="block px-4 py-3 text-sm text-slate-700 hover:bg-primary hover:text-white transition-colors first:rounded-t-lg"
-                    :class="route.path.includes('kontrol') ? 'bg-primary text-white' : ''"
-                  >
-                    <span class="material-symbols-outlined text-base align-middle mr-2">inventory_2</span>
-                    Produk
-                  </NuxtLink>
-                  <NuxtLink
-                    to="/admin/kategori"
-                    class="block px-4 py-3 text-sm text-slate-700 hover:bg-primary hover:text-white transition-colors"
-                    :class="route.path.includes('kategori') ? 'bg-primary text-white' : ''"
-                  >
-                    <span class="material-symbols-outlined text-base align-middle mr-2">category</span>
-                    Kategori
-                  </NuxtLink>
-                  <NuxtLink
-                    to="/admin/brand"
-                    class="block px-4 py-3 text-sm text-slate-700 hover:bg-primary hover:text-white transition-colors"
-                    :class="route.path.includes('brand') ? 'bg-primary text-white' : ''"
-                  >
-                    <span class="material-symbols-outlined text-base align-middle mr-2">business</span>
-                    Brand
-                  </NuxtLink>
-                  <NuxtLink
-                    to="/admin/inquiries"
-                    class="block px-4 py-3 text-sm text-slate-700 hover:bg-primary hover:text-white transition-colors"
-                    :class="route.path.includes('inquiries') ? 'bg-primary text-white' : ''"
-                  >
-                    <span class="material-symbols-outlined text-base align-middle mr-2">mail</span>
-                    Pertanyaan
-                  </NuxtLink>
-                  <NuxtLink
-                    to="/admin/profile"
-                    class="block px-4 py-3 text-sm text-slate-700 hover:bg-primary hover:text-white transition-colors last:rounded-b-lg"
-                    :class="route.path.includes('profile') ? 'bg-primary text-white' : ''"
-                  >
-                    <span class="material-symbols-outlined text-base align-middle mr-2">person</span>
-                    Profil
-                  </NuxtLink>
-                </div>
-              </div>
+              <!-- Kontrol (Products) -->
+              <NuxtLink
+                to="/admin/kontrol"
+                class="text-sm font-medium text-slate-700 hover:text-primary transition-colors"
+                :class="route.path.includes('kontrol') ? 'text-primary border-b-2 border-primary pb-1' : ''"
+              >
+                Kontrol
+              </NuxtLink>
+
+              <!-- Kategori -->
+              <NuxtLink
+                to="/admin/kategori"
+                class="text-sm font-medium text-slate-700 hover:text-primary transition-colors"
+                :class="route.path.includes('kategori') ? 'text-primary border-b-2 border-primary pb-1' : ''"
+              >
+                Kategori
+              </NuxtLink>
+
+              <!-- Brand -->
+              <NuxtLink
+                to="/admin/brand"
+                class="text-sm font-medium text-slate-700 hover:text-primary transition-colors"
+                :class="route.path.includes('brand') ? 'text-primary border-b-2 border-primary pb-1' : ''"
+              >
+                Brand
+              </NuxtLink>
+
+              <!-- Pertanyaan -->
+              <NuxtLink
+                to="/admin/inquiries"
+                class="text-sm font-medium text-slate-700 hover:text-primary transition-colors"
+                :class="route.path.includes('inquiries') ? 'text-primary border-b-2 border-primary pb-1' : ''"
+              >
+                Pertanyaan
+              </NuxtLink>
+
+              <!-- Profil -->
+              <NuxtLink
+                to="/admin/profile"
+                class="text-sm font-medium text-slate-700 hover:text-primary transition-colors"
+                :class="route.path.includes('profile') ? 'text-primary border-b-2 border-primary pb-1' : ''"
+              >
+                Profil
+              </NuxtLink>
 
               <!-- User Management -->
               <NuxtLink
@@ -82,15 +76,6 @@
               >
                 Pengguna
               </NuxtLink>
-
-              <!-- Settings -->
-              <NuxtLink
-                to="/admin/settings"
-                class="text-sm font-medium text-slate-700 hover:text-primary transition-colors"
-                :class="route.path === '/admin/settings' ? 'text-primary border-b-2 border-primary pb-1' : ''"
-              >
-                Pengaturan
-              </NuxtLink>
             </div>
 
             <!-- User Menu -->
@@ -98,95 +83,81 @@
               <span class="text-sm text-slate-600">{{ currentUser?.name || 'Admin' }}</span>
               <button
                 @click="logout"
-                class="px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                class="px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded transition-colors"
               >
                 Logout
               </button>
             </div>
           </div>
-        </div>
-
-        <!-- Mobile Navigation -->
-        <div class="md:hidden flex justify-between items-center h-16">
-          <!-- Logo -->
-          <NuxtLink to="/admin" class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-primary">admin_panel_settings</span>
-            <h1 class="text-sm font-bold text-slate-900">Admin</h1>
-          </NuxtLink>
 
           <!-- Mobile Menu Button -->
           <button
             @click="mobileMenuOpen = !mobileMenuOpen"
-            class="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            class="md:hidden p-2 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <span class="material-symbols-outlined">{{ mobileMenuOpen ? 'close' : 'menu' }}</span>
           </button>
         </div>
 
-        <!-- Mobile Menu (collapsed) -->
-        <div v-if="mobileMenuOpen" class="md:hidden border-t border-slate-200 py-4 space-y-2">
+        <!-- Mobile Menu -->
+        <div v-if="mobileMenuOpen" class="md:hidden border-t border-slate-200 py-3 space-y-1">
           <NuxtLink
             to="/admin"
-            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded transition-colors"
             :class="route.path === '/admin' ? 'bg-primary text-white' : ''"
           >
             Dashboard
           </NuxtLink>
           <NuxtLink
             to="/admin/kontrol"
-            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded transition-colors"
             :class="route.path.includes('kontrol') ? 'bg-primary text-white' : ''"
           >
-            Produk
+            Kontrol
           </NuxtLink>
           <NuxtLink
             to="/admin/kategori"
-            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded transition-colors"
             :class="route.path.includes('kategori') ? 'bg-primary text-white' : ''"
           >
             Kategori
           </NuxtLink>
           <NuxtLink
             to="/admin/brand"
-            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded transition-colors"
             :class="route.path.includes('brand') ? 'bg-primary text-white' : ''"
           >
             Brand
           </NuxtLink>
           <NuxtLink
             to="/admin/inquiries"
-            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded transition-colors"
             :class="route.path.includes('inquiries') ? 'bg-primary text-white' : ''"
           >
             Pertanyaan
           </NuxtLink>
           <NuxtLink
             to="/admin/profile"
-            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded transition-colors"
             :class="route.path.includes('profile') ? 'bg-primary text-white' : ''"
           >
             Profil
           </NuxtLink>
           <NuxtLink
             to="/admin/users"
-            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded transition-colors"
             :class="route.path.includes('/users') ? 'bg-primary text-white' : ''"
           >
             Pengguna
           </NuxtLink>
-          <NuxtLink
-            to="/admin/settings"
-            class="block px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-            :class="route.path === '/admin/settings' ? 'bg-primary text-white' : ''"
-          >
-            Pengaturan
-          </NuxtLink>
-          <button
-            @click="logout"
-            class="w-full text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            Logout
-          </button>
+          <div class="border-t border-slate-200 pt-3 mt-3">
+            <button
+              @click="logout"
+              class="w-full text-left px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
     </nav>
