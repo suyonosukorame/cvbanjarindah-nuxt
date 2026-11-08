@@ -104,6 +104,8 @@
 </template>
 
 <script setup lang="ts">
+import corporateVisionFlyer from '~/assets/images/cv-banjar-indah-corporate-vision-flyer.webp'
+
 definePageMeta({
   layout: 'default',
 });
@@ -114,8 +116,6 @@ const missions = [
   'Membangun kemitraan jangka panjang dengan pelanggan',
   'Berkontribusi pada pertumbuhan ekonomi lokal',
 ];
-
-const corporateVisionFlyer = '/CV%20Banjar%20Indah%20Corporate%20Vision%20Flyer.webp'
 
 // Fetch dynamic data from Supabase
 const { supabase } = useSupabase()
