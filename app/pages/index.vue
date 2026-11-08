@@ -15,24 +15,17 @@
       </div>
     </section>
 
-    <!-- 3. Products Section -->
-    <section class="py-16 max-w-7xl mx-auto px-4">
-      <SectionsSectionHeading 
-        title="Produk Kami" 
+    <!-- 3. Products Section (OPSI 4 - Smart Header) -->
+    <section class="py-0">
+      <OrganismsFeaturedProductsSection
+        title="Produk Kami"
         subtitle="Berbagai kategori produk berkualitas untuk kebutuhan toko Anda"
+        :products="products"
+        :categories="['Semua', 'Tissue', 'Masker', 'Bayi']"
       />
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <MoleculesCategoryCard
-          v-for="(category, index) in featuredCategories"
-          :key="category.id"
-          :category="category"
-          :image="categoryImages[index]"
-        />
-      </div>
     </section>
 
-    <!-- 4. Pricing Packages Section (NEW) -->
+    <!-- 4. Pricing Packages Section (OPSI 4A - Tabs Pager Mobile) -->
     <section class="py-16 bg-gradient-to-br from-slate-50 to-slate-100">
       <div class="max-w-7xl mx-auto px-4">
         <SectionsSectionHeading 
@@ -41,7 +34,13 @@
           align="center"
         />
         
-        <OrganismsPricingGrid :packages="pricingPackages" />
+        <!-- Desktop: Grid, Mobile: Tabs Pager -->
+        <div class="hidden md:block">
+          <OrganismsPricingGrid :packages="pricingPackages" />
+        </div>
+        <div class="md:hidden">
+          <OrganismsPricingTabsPager :packages="pricingPackages" />
+        </div>
       </div>
     </section>
 
@@ -109,7 +108,7 @@
       </div>
     </section>
 
-    <!-- 8. Coverage Map Section (NEW) -->
+    <!-- 8. Coverage Map Section (OPSI 8A - Accordion) -->
     <section class="py-16 bg-slate-50">
       <div class="max-w-7xl mx-auto px-4">
         <SectionsSectionHeading 
@@ -118,7 +117,7 @@
           align="center"
         />
         
-        <OrganismsCoverageGrid :areas="coverageAreas" />
+        <OrganismsCoverageAccordion :areas="coverageAreas" />
       </div>
     </section>
 
@@ -141,7 +140,7 @@
 </template>
 
 <script setup lang="ts">
-import { productCategories } from '~/data/products';
+import { products } from '~/data/products';
 import { 
   features, 
   whyChooseUs, 
@@ -155,12 +154,4 @@ import {
 definePageMeta({
   layout: 'default',
 });
-
-const featuredCategories = productCategories;
-
-const categoryImages = [
-  'https://images.unsplash.com/photo-1584556326561-c8746083993b?w=400&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1603791440384-56cd371ee9a7?w=400&h=300&fit=crop',
-  'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&h=300&fit=crop',
-];
 </script>
