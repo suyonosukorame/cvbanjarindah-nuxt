@@ -102,6 +102,8 @@ export const companyValues = [
     title: 'Integritas',
     description: 'Berkomitmen pada kejujuran dan transparansi dalam setiap transaksi bisnis',
     color: 'blue',
+    colorStart: '#3b82f6',
+    colorEnd: '#1e40af',
   },
   {
     id: '2',
@@ -109,6 +111,8 @@ export const companyValues = [
     title: 'Profesionalisme',
     description: 'Memberikan layanan terbaik dengan standar profesional yang tinggi',
     color: 'green',
+    colorStart: '#10b981',
+    colorEnd: '#059669',
   },
   {
     id: '3',
@@ -116,6 +120,8 @@ export const companyValues = [
     title: 'Kemitraan',
     description: 'Membangun hubungan jangka panjang yang saling menguntungkan',
     color: 'purple',
+    colorStart: '#a855f7',
+    colorEnd: '#7e22ce',
   },
 ];
 

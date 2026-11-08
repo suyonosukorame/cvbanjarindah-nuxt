@@ -57,12 +57,18 @@
           <div
             v-for="value in companyValues"
             :key="value.id"
-            class="text-white rounded-2xl p-8 shadow-lg"
-            :class="`bg-gradient-to-br from-${value.color}-500 to-${value.color}-600`"
+            class="text-white rounded-2xl p-8 shadow-lg h-full flex flex-col justify-between overflow-hidden"
+            :style="{
+              backgroundImage: `linear-gradient(135deg, var(--color-start), var(--color-end))`,
+              '--color-start': value.colorStart || '#10b981',
+              '--color-end': value.colorEnd || '#059669'
+            }"
           >
-            <div class="text-5xl mb-4">{{ value.icon }}</div>
-            <h3 class="font-black text-xl mb-3">{{ value.title }}</h3>
-            <p :class="`text-${value.color}-50`">{{ value.description }}</p>
+            <div>
+              <div class="text-5xl mb-4">{{ value.icon }}</div>
+              <h3 class="font-black text-xl mb-3">{{ value.title }}</h3>
+            </div>
+            <p class="text-opacity-90 text-white text-sm leading-relaxed">{{ value.description }}</p>
           </div>
         </div>
       </div>
