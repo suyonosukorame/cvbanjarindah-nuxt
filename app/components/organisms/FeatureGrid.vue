@@ -15,5 +15,5 @@ interface Props {
   features: Feature[];
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 </script>

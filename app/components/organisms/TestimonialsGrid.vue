@@ -22,5 +22,5 @@ interface Props {
   testimonials: Testimonial[];
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 </script>
