@@ -82,23 +82,44 @@ export const useAuth = () => {
         return null;
       }
 
-      // Get role permissions
-      const { data: permissions, error: permError } = await $supabase
-        .from('role_permissions')
-        .select(`
-          can_create_users,
-          can_delete_users,
-          can_edit_users,
-          can_view_reports,
-          can_manage_content,
-          can_manage_roles,
-          can_view_all_data,
-          can_export_data
-        `)
-        .eq('role', adminProfile.role)
-        .maybeSingle();
+      // Get role permissions (graceful fallback if table does not exist or role not found)
+      let permissions: UserPermissions | null = null;
+      try {
+        const { data: permData, error: permError } = await $supabase
+          .from('role_permissions')
+          .select(`
+            can_create_users,
+            can_delete_users,
+            can_edit_users,
+            can_view_reports,
+            can_manage_content,
+            can_manage_roles,
+            can_view_all_data,
+            can_export_data
+          `)
+          .eq('role', adminProfile.role)
+          .maybeSingle();
 
-      if (permError) throw permError;
+        if (!permError && permData) {
+          permissions = permData as UserPermissions;
+        }
+      } catch (e) {
+        console.warn('Could not load role permissions:', e);
+      }
+
+      // Default full permissions for super_admin if not in role_permissions table
+      if (!permissions && adminProfile.role === 'super_admin') {
+        permissions = {
+          can_create_users: true,
+          can_delete_users: true,
+          can_edit_users: true,
+          can_view_reports: true,
+          can_manage_content: true,
+          can_manage_roles: true,
+          can_view_all_data: true,
+          can_export_data: true,
+        };
+      }
 
       user.value = adminProfile as AdminUser;
       userRole.value = adminProfile.role;
