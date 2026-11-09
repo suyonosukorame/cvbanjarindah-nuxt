@@ -12,8 +12,10 @@
 interface Testimonial {
   id: string;
   name: string;
-  location: string;
-  photo: string;
+  location?: string;
+  company?: string;
+  photo?: string;
+  avatar?: string;
   rating: number;
   text: string;
 }

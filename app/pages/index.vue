@@ -201,12 +201,14 @@ onMounted(async () => {
       .order('created_at', { ascending: false })
       .limit(6)
     
-    if (testimonialsData) {
+    if (testimonialsData && testimonialsData.length > 0) {
       testimonials.value = testimonialsData.map((item: any) => ({
         id: item.id,
         name: item.customer_name,
+        location: item.customer_company || 'Banjarmasin',
         company: item.customer_company || '',
-        avatar: item.customer_avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(item.customer_name),
+        photo: item.customer_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.customer_name)}&background=ff5910&color=fff&size=100`,
+        avatar: item.customer_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.customer_name)}&background=ff5910&color=fff&size=100`,
         rating: item.rating || 5,
         text: item.testimonial,
       }))
