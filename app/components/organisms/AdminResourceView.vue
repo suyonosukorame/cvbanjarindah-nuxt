@@ -110,31 +110,18 @@
                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50"
                 />
 
-                <!-- Relation Dropdown (foreign key) -->
-                <div v-else-if="field.type === 'relation'" class="relative">
-                  <select 
-                    v-model="form[field.key]"
-                    class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-slate-50"
-                    :disabled="saving || relationLoading[field.key]"
-                  >
-                    <option value="">
-                      {{ relationLoading[field.key] ? 'Memuat data...' : `— Pilih ${field.label} —` }}
-                    </option>
-                    <option 
-                      v-for="opt in relationOptions[field.key]" 
-                      :key="opt.value" 
-                      :value="opt.value"
-                    >
-                      {{ opt.label }}
-                    </option>
-                  </select>
-                  <span 
-                    v-if="relationLoading[field.key]"
-                    class="material-symbols-outlined animate-spin absolute right-8 top-2 text-lg text-slate-400"
-                  >
-                    progress_activity
-                  </span>
-                </div>
+                <!-- Relation Dropdown dengan Quick Add -->
+                <AtomsRelationSelect
+                  v-else-if="field.type === 'relation'"
+                  v-model="form[field.key]"
+                  :options="relationOptions[field.key] ?? []"
+                  :label="field.label"
+                  :loading="relationLoading[field.key]"
+                  :disabled="saving"
+                  :relation-table="field.relationTable!"
+                  :relation-label="field.relationLabel"
+                  @refresh="refreshRelation(field)"
+                />
 
                 <!-- Boolean / Select Dropdown -->
                 <select 
@@ -414,6 +401,31 @@ const loadRelationOptions = async () => {
     } finally {
       relationLoading.value[field.key] = false;
     }
+  }
+};
+
+/** Refresh opsi untuk satu field relasi saja (dipanggil setelah Quick Add) */
+const refreshRelation = async (field: AdminField) => {
+  if (!$supabase || !field.relationTable) return;
+  relationLoading.value[field.key] = true;
+
+  try {
+    const labelCol = field.relationLabel ?? 'name';
+    const { data, error } = await $supabase
+      .from(field.relationTable)
+      .select(`id, ${labelCol}`)
+      .order(labelCol, { ascending: true });
+
+    if (error) throw error;
+
+    relationOptions.value[field.key] = (data ?? []).map((row: Record<string, any>) => ({
+      label: String(row[labelCol] ?? row.id),
+      value: String(row.id),
+    }));
+  } catch {
+    // Gagal refresh, biarkan opsi lama tetap ada
+  } finally {
+    relationLoading.value[field.key] = false;
   }
 };
 
