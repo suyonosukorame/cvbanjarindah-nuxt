@@ -149,7 +149,7 @@ definePageMeta({
 })
 
 const route = useRoute()
-const { $fetch } = useNuxtApp()
+const { $supabase } = useNuxtApp()
 
 const form = ref({
   name: '',
@@ -205,10 +205,24 @@ onMounted(async () => {
 })
 
 const loadUser = async () => {
+  if (!$supabase) return
   isLoading.value = true
   try {
-    const user = await $fetch(`/api/users/${route.params.id}`)
-    Object.assign(form.value, user)
+    const { data: user, error } = await $supabase
+      .from('admin_users')
+      .select('*')
+      .eq('id', route.params.id)
+      .single()
+
+    if (error) throw error
+
+    if (user) {
+      form.value.name = user.full_name || ''
+      form.value.email = user.email || ''
+      form.value.role = user.role || 'employee'
+      form.value.department = user.departemen || ''
+      form.value.status = user.status || (user.is_active ? 'active' : 'pending')
+    }
   } catch (error) {
     errorMessage.value = 'Gagal memuat data pengguna'
     console.error('Failed to load user:', error)
@@ -253,15 +267,26 @@ const handleSave = async () => {
 
   saveLoading.value = true
   try {
-    await $fetch(`/api/users/${route.params.id}`, {
-      method: 'PUT',
-      body: form.value
-    })
+    if (!$supabase) throw new Error('Koneksi database tidak tersedia')
+
+    const { error } = await $supabase
+      .from('admin_users')
+      .update({
+        full_name: form.value.name,
+        role: form.value.role,
+        departemen: form.value.department || null,
+        status: form.value.status,
+        is_active: form.value.status === 'active',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', route.params.id)
+
+    if (error) throw error
 
     successMessage.value = 'Pengguna berhasil diperbarui'
     setTimeout(() => {
       navigateTo('/admin/users')
-    }, 2000)
+    }, 1500)
   } catch (error) {
     errorMessage.value = 'Gagal menyimpan perubahan'
     console.error('Failed to update user:', error)

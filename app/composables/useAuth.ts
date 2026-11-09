@@ -48,7 +48,7 @@ export const useAuth = () => {
         return null;
       }
 
-      // Get admin profile with role & permissions
+      // Check admin profile
       const { data: adminProfile, error: profileError } = await $supabase
         .from('admin_users')
         .select(`
@@ -62,12 +62,19 @@ export const useAuth = () => {
           status
         `)
         .eq('id', sessionData.session.user.id)
-        .eq('is_active', true)
         .maybeSingle();
       
       if (profileError) throw profileError;
 
       if (!adminProfile) {
+        user.value = null;
+        userRole.value = null;
+        userPermissions.value = null;
+        isInitialized.value = true;
+        return null;
+      }
+
+      if (!adminProfile.is_active) {
         user.value = null;
         userRole.value = null;
         userPermissions.value = null;
@@ -115,11 +122,25 @@ export const useAuth = () => {
     try {
       const { data, error } = await $supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      const adminUser = await checkAuth(true);
-      if (!adminUser) {
+
+      // Check admin status specifically
+      const { data: profile } = await $supabase
+        .from('admin_users')
+        .select('id, is_active, status')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (!profile) {
         await $supabase.auth.signOut();
-        throw new Error('Akun ini belum terdaftar sebagai admin aktif.');
+        throw new Error('Akun ini belum terdaftar di sistem portal admin.');
       }
+
+      if (!profile.is_active || profile.status === 'pending') {
+        await $supabase.auth.signOut();
+        throw new Error('Akun Anda masih menunggu persetujuan (approval) dari Super Admin sebelum dapat masuk.');
+      }
+
+      const adminUser = await checkAuth(true);
       return adminUser;
     } finally {
       loading.value = false;
