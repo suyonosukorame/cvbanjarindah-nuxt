@@ -34,9 +34,23 @@ CREATE INDEX IF NOT EXISTS idx_admin_users_role      ON public.admin_users(role)
 CREATE INDEX IF NOT EXISTS idx_admin_users_is_active ON public.admin_users(is_active);
 
 -- ============================================================================
--- STEP 5: Fungsi Helper SECURITY DEFINER untuk mencegah RLS Infinite Recursion
--- (Fungsi ini berjalan sebagai superuser sehingga TIDAK memicu policy rekursif)
+-- STEP 5: Hapus SEMUA policy lama pada admin_users secara dinamis
+-- (Memastikan tidak ada policy rekursif lama yang tertinggal di Supabase)
 -- ============================================================================
+DO $$
+DECLARE
+    pol RECORD;
+BEGIN
+    FOR pol IN 
+        SELECT policyname 
+        FROM pg_policies 
+        WHERE tablename = 'admin_users' AND schemaname = 'public'
+    LOOP
+        EXECUTE format('DROP POLICY IF EXISTS %I ON public.admin_users', pol.policyname);
+    END LOOP;
+END $$;
+
+-- Fungsi Helper SECURITY DEFINER untuk pengecekan Super Admin (Update & Delete)
 CREATE OR REPLACE FUNCTION public.is_super_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -51,47 +65,33 @@ AS $$
 $$;
 
 REVOKE ALL ON FUNCTION public.is_super_admin() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated, anon;
 
 -- Pastikan RLS aktif pada admin_users
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
--- STEP 6: Drop semua policy lama lalu buat ulang TANPA rekursi
+-- STEP 6: Pasang Policy Baru (Bebas Rekursi 100%)
 -- ============================================================================
 
--- Drop semua policy yang ada sebelumnya
-DROP POLICY IF EXISTS "Users can insert own profile"           ON public.admin_users;
-DROP POLICY IF EXISTS "Authenticated users can insert profile" ON public.admin_users;
-DROP POLICY IF EXISTS "Users can view own profile"             ON public.admin_users;
-DROP POLICY IF EXISTS "Super admin can view all users"         ON public.admin_users;
-DROP POLICY IF EXISTS "Super admin can update all users"       ON public.admin_users;
-DROP POLICY IF EXISTS "Super admin can delete users"           ON public.admin_users;
-DROP POLICY IF EXISTS "Users can update own profile"           ON public.admin_users;
-DROP POLICY IF EXISTS "Admins can read their own profile"      ON public.admin_users;
-DROP POLICY IF EXISTS "Super admins can manage all profiles"   ON public.admin_users;
-
--- Policy 1: User bisa INSERT dirinya sendiri saat signup
-CREATE POLICY "Users can insert own profile" ON public.admin_users
+-- Policy 1: User yang mendaftar bisa INSERT profil dirinya sendiri
+CREATE POLICY "Allow authenticated insert own profile" ON public.admin_users
   FOR INSERT TO authenticated
   WITH CHECK (id = auth.uid());
 
--- Policy 2: User bisa melihat profil dirinya sendiri OR Super Admin bisa melihat SEMUA user
-CREATE POLICY "Users and super admin can view profiles" ON public.admin_users
+-- Policy 2: Semua staf yang sudah LOGIN (authenticated) boleh membaca daftar admin
+-- (Menggunakan USING (true) sehingga MUSTAHIL terjadi loop rekursi / error 42P17)
+CREATE POLICY "Allow authenticated read admin_users" ON public.admin_users
   FOR SELECT TO authenticated
-  USING (
-    id = auth.uid() OR public.is_super_admin()
-  );
+  USING (true);
 
--- Policy 3: User bisa UPDATE profil dirinya sendiri OR Super Admin bisa UPDATE siapa saja
-CREATE POLICY "Users and super admin can update profiles" ON public.admin_users
+-- Policy 3: Hanya diri sendiri atau Super Admin yang boleh UPDATE profil
+CREATE POLICY "Allow update own profile or super admin" ON public.admin_users
   FOR UPDATE TO authenticated
-  USING (
-    id = auth.uid() OR public.is_super_admin()
-  );
+  USING (id = auth.uid() OR public.is_super_admin());
 
--- Policy 4: Hanya Super Admin yang bisa DELETE user
-CREATE POLICY "Super admin can delete users" ON public.admin_users
+-- Policy 4: Hanya Super Admin yang boleh DELETE user
+CREATE POLICY "Allow delete only super admin" ON public.admin_users
   FOR DELETE TO authenticated
   USING (public.is_super_admin());
 
