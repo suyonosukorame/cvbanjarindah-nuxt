@@ -34,71 +34,66 @@ CREATE INDEX IF NOT EXISTS idx_admin_users_role      ON public.admin_users(role)
 CREATE INDEX IF NOT EXISTS idx_admin_users_is_active ON public.admin_users(is_active);
 
 -- ============================================================================
--- STEP 5: Pastikan RLS (Row Level Security) aktif
+-- STEP 5: Fungsi Helper SECURITY DEFINER untuk mencegah RLS Infinite Recursion
+-- (Fungsi ini berjalan sebagai superuser sehingga TIDAK memicu policy rekursif)
 -- ============================================================================
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE id = auth.uid() AND role = 'super_admin' AND is_active = true
+  );
+$$;
+
+REVOKE ALL ON FUNCTION public.is_super_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated;
+
+-- Pastikan RLS aktif pada admin_users
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================================
--- STEP 6: Drop semua policy lama lalu buat ulang dengan benar
+-- STEP 6: Drop semua policy lama lalu buat ulang TANPA rekursi
 -- ============================================================================
 
--- Policy: Siapapun yang sudah auth bisa INSERT dirinya sendiri (untuk signup)
+-- Drop semua policy yang ada sebelumnya
 DROP POLICY IF EXISTS "Users can insert own profile"           ON public.admin_users;
 DROP POLICY IF EXISTS "Authenticated users can insert profile" ON public.admin_users;
+DROP POLICY IF EXISTS "Users can view own profile"             ON public.admin_users;
+DROP POLICY IF EXISTS "Super admin can view all users"         ON public.admin_users;
+DROP POLICY IF EXISTS "Super admin can update all users"       ON public.admin_users;
+DROP POLICY IF EXISTS "Super admin can delete users"           ON public.admin_users;
+DROP POLICY IF EXISTS "Users can update own profile"           ON public.admin_users;
+DROP POLICY IF EXISTS "Admins can read their own profile"      ON public.admin_users;
+DROP POLICY IF EXISTS "Super admins can manage all profiles"   ON public.admin_users;
+
+-- Policy 1: User bisa INSERT dirinya sendiri saat signup
 CREATE POLICY "Users can insert own profile" ON public.admin_users
   FOR INSERT TO authenticated
   WITH CHECK (id = auth.uid());
 
--- Policy: User bisa baca profil dirinya sendiri
-DROP POLICY IF EXISTS "Users can view own profile" ON public.admin_users;
-CREATE POLICY "Users can view own profile" ON public.admin_users
-  FOR SELECT TO authenticated
-  USING (id = auth.uid());
-
--- Policy: Super Admin bisa baca SEMUA user (termasuk pending)
-DROP POLICY IF EXISTS "Super admin can view all users" ON public.admin_users;
-CREATE POLICY "Super admin can view all users" ON public.admin_users
+-- Policy 2: User bisa melihat profil dirinya sendiri OR Super Admin bisa melihat SEMUA user
+CREATE POLICY "Users and super admin can view profiles" ON public.admin_users
   FOR SELECT TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM public.admin_users sa
-      WHERE sa.id = auth.uid()
-        AND sa.role = 'super_admin'
-        AND sa.is_active = true
-    )
+    id = auth.uid() OR public.is_super_admin()
   );
 
--- Policy: Super Admin bisa UPDATE semua user (untuk approve)
-DROP POLICY IF EXISTS "Super admin can update all users" ON public.admin_users;
-CREATE POLICY "Super admin can update all users" ON public.admin_users
+-- Policy 3: User bisa UPDATE profil dirinya sendiri OR Super Admin bisa UPDATE siapa saja
+CREATE POLICY "Users and super admin can update profiles" ON public.admin_users
   FOR UPDATE TO authenticated
   USING (
-    EXISTS (
-      SELECT 1 FROM public.admin_users sa
-      WHERE sa.id = auth.uid()
-        AND sa.role = 'super_admin'
-        AND sa.is_active = true
-    )
+    id = auth.uid() OR public.is_super_admin()
   );
 
--- Policy: Super Admin bisa DELETE user
-DROP POLICY IF EXISTS "Super admin can delete users" ON public.admin_users;
+-- Policy 4: Hanya Super Admin yang bisa DELETE user
 CREATE POLICY "Super admin can delete users" ON public.admin_users
   FOR DELETE TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.admin_users sa
-      WHERE sa.id = auth.uid()
-        AND sa.role = 'super_admin'
-        AND sa.is_active = true
-    )
-  );
-
--- Policy: User bisa UPDATE profil dirinya sendiri (email, nama, dll)
-DROP POLICY IF EXISTS "Users can update own profile" ON public.admin_users;
-CREATE POLICY "Users can update own profile" ON public.admin_users
-  FOR UPDATE TO authenticated
-  USING (id = auth.uid());
+  USING (public.is_super_admin());
 
 -- ============================================================================
 -- STEP 7: Sinkronisasi akun yang sudah terdaftar di auth.users tapi belum ada di admin_users
