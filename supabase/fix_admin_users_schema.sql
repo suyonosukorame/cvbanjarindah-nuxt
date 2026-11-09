@@ -101,7 +101,36 @@ CREATE POLICY "Users can update own profile" ON public.admin_users
   USING (id = auth.uid());
 
 -- ============================================================================
--- STEP 7: Verifikasi — Tampilkan semua data admin_users saat ini
+-- STEP 7: Sinkronisasi akun yang sudah terdaftar di auth.users tapi belum ada di admin_users
+-- (Memulihkan user yang sempat daftar tapi profilnya tidak tersimpan)
+-- ============================================================================
+INSERT INTO public.admin_users (id, email, full_name, role, status, is_active, created_at, updated_at)
+SELECT 
+  au.id,
+  au.email,
+  COALESCE(au.raw_user_meta_data->>'full_name', split_part(au.email, '@', 1)),
+  CASE 
+    WHEN NOT EXISTS (SELECT 1 FROM public.admin_users WHERE role = 'super_admin') THEN 'super_admin'
+    ELSE 'employee'
+  END,
+  CASE 
+    WHEN NOT EXISTS (SELECT 1 FROM public.admin_users WHERE role = 'super_admin') THEN 'active'
+    ELSE 'pending'
+  END,
+  CASE 
+    WHEN NOT EXISTS (SELECT 1 FROM public.admin_users WHERE role = 'super_admin') THEN true
+    ELSE false
+  END,
+  au.created_at,
+  NOW()
+FROM auth.users au
+WHERE NOT EXISTS (
+  SELECT 1 FROM public.admin_users adm WHERE adm.id = au.id
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- ============================================================================
+-- STEP 8: Verifikasi — Tampilkan semua data admin_users saat ini
 -- ============================================================================
 SELECT
   id,
