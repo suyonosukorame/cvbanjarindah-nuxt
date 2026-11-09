@@ -149,7 +149,7 @@
             <div class="space-y-3">
               <div class="flex justify-between items-center text-sm">
                 <span class="font-bold text-slate-900">Senin - Sabtu</span>
-                <span class="text-slate-700 font-semibold bg-emerald-50 px-2.5 py-1 rounded-md text-emerald-700">08.30 - 17.00 WITA</span>
+                <span class="font-semibold bg-emerald-50 px-2.5 py-1 rounded-md text-emerald-700">08.30 - 17.00 WITA</span>
               </div>
               <div class="flex justify-between items-center text-sm">
                 <span class="font-bold text-slate-900">Minggu</span>
