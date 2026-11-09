@@ -48,8 +48,13 @@ export const useProductFiltering = (allProducts: Ref<Product[]>, categories: Ref
         break
       case 'newest':
       default:
-        // Assuming 'newest' is default order or by ID descending
-        results.sort((a, b) => (b.id || 0) - (a.id || 0))
+        // Sort by createdAt descending or by ID descending
+        results.sort((a, b) => {
+          if (b.createdAt && a.createdAt) {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          }
+          return String(b.id || '').localeCompare(String(a.id || ''))
+        })
         break
     }
 

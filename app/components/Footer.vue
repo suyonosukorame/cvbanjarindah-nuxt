@@ -106,11 +106,8 @@
 </template>
 
 <script setup lang="ts">
-// Footer with real-time stats from Supabase
-const stats = ref({
-  visits: 0,
-  visitors: 0,
-})
+// Footer with reactive stats shared with usePageTracking
+const { stats, fetchStats } = usePageTracking()
 
 // Auto-calculate Hijri year from current Gregorian date
 const hijriYear = computed(() => {
@@ -118,36 +115,8 @@ const hijriYear = computed(() => {
   return currentYear - 579 // Approximate conversion
 })
 
-// Fetch stats from Supabase on component mount
+// Initial stats fetch on mount
 onMounted(async () => {
   await fetchStats()
 })
-
-async function fetchStats() {
-  try {
-    const { supabase } = useSupabase()
-    
-    // Fetch visit count (total page views)
-    const { count: visitCount } = await supabase
-      .from('page_visits')
-      .select('*', { count: 'exact', head: true })
-    
-    // Fetch unique visitors
-    const { count: visitorCount } = await supabase
-      .from('unique_visitors')
-      .select('*', { count: 'exact', head: true })
-    
-    stats.value = {
-      visits: visitCount || 0,
-      visitors: visitorCount || 0,
-    }
-  } catch (error) {
-    console.error('Error fetching stats:', error)
-    // Use default values on error
-    stats.value = {
-      visits: 0,
-      visitors: 0,
-    }
-  }
-}
 </script>

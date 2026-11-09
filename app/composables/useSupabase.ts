@@ -1,12 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
+let cachedClient: SupabaseClient | null = null;
 
 export const useSupabase = () => {
   const config = useRuntimeConfig();
 
-  const supabase = createClient(
-    config.public.supabaseEndpoint,
-    config.public.supabasePublishableKey
-  );
+  if (!cachedClient) {
+    cachedClient = createClient(
+      config.public.supabaseEndpoint,
+      config.public.supabasePublishableKey
+    );
+  }
+
+  const supabase = cachedClient;
 
   return {
     supabase,
@@ -100,10 +106,11 @@ export const useSupabase = () => {
      */
     subscribeToProducts(callback: (payload: any) => void) {
       return supabase
+        .channel('products-channel')
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'products' },
-          (payload) => callback(payload)
+          (payload: any) => callback(payload)
         )
         .subscribe();
     },
