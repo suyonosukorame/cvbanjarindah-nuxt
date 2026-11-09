@@ -32,14 +32,19 @@ export function usePageTracking() {
     })
   }
 
+  const isValidUUID = (id: string | null): boolean => {
+    if (!id) return false
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+  }
+
   // Generate or retrieve visitor ID from localStorage
   const getVisitorId = (): string => {
-    if (process.server) return ''
+    if (import.meta.server) return ''
 
     const storageKey = 'cv_visitor_id'
     let visitorId = localStorage.getItem(storageKey)
 
-    if (!visitorId) {
+    if (!visitorId || !isValidUUID(visitorId)) {
       visitorId = generateUUID()
       localStorage.setItem(storageKey, visitorId)
     }
@@ -49,12 +54,12 @@ export function usePageTracking() {
 
   // Generate session ID (expires on browser close)
   const getSessionId = (): string => {
-    if (process.server) return ''
+    if (import.meta.server) return ''
 
     const storageKey = 'cv_session_id'
     let sessionId = sessionStorage.getItem(storageKey)
 
-    if (!sessionId) {
+    if (!sessionId || !isValidUUID(sessionId)) {
       sessionId = generateUUID()
       sessionStorage.setItem(storageKey, sessionId)
     }
@@ -64,7 +69,7 @@ export function usePageTracking() {
 
   // Get basic device info
   const getDeviceInfo = () => {
-    if (process.server) return { device_type: 'unknown', browser: 'unknown', os: 'unknown' }
+    if (import.meta.server) return { device_type: 'unknown', browser: 'unknown', os: 'unknown' }
 
     const ua = navigator.userAgent
 
@@ -114,20 +119,21 @@ export function usePageTracking() {
   }
 
   // Track page visit
-  const trackPageVisit = async () => {
-    if (process.server) return
+  const trackPageVisit = async (customPath?: string) => {
+    if (import.meta.server) return
 
     try {
       const visitorId = getVisitorId()
       const sessionId = getSessionId()
       const deviceInfo = getDeviceInfo()
+      const targetPath = customPath || route.fullPath || window.location.pathname
 
       // 1. Insert page visit
       const { error: visitError } = await supabase
         .from('page_visits')
         .insert({
-          page_url: route.path,
-          page_title: document.title,
+          page_url: targetPath,
+          page_title: document.title || 'CV Banjar Indah',
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
           session_id: sessionId,
@@ -145,7 +151,7 @@ export function usePageTracking() {
         })
 
       if (visitorError) {
-        console.error('Error tracking visitor:', visitorError.message)
+        console.error('Error tracking visitor via RPC:', visitorError.message)
       }
 
       // 3. Immediately re-fetch stats so all UI counters update in real-time
@@ -157,18 +163,18 @@ export function usePageTracking() {
 
   // Track on initial load and subsequent route changes
   const startTracking = () => {
-    if (isTrackingStarted || process.server) return
+    if (isTrackingStarted || import.meta.server) return
     isTrackingStarted = true
 
     // Track initial page
     trackPageVisit()
 
     // Track on route change
-    router.afterEach(() => {
+    router.afterEach((to) => {
       // Delay slightly to let document.title and route finalize
       setTimeout(() => {
-        trackPageVisit()
-      }, 100)
+        trackPageVisit(to.fullPath)
+      }, 150)
     })
   }
 
