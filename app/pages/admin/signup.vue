@@ -220,23 +220,49 @@ const handleSignUp = async () => {
     // 3. Masukkan profil ke tabel admin_users
     // Jika admin pertama: langsung active & super_admin
     // Jika admin berikutnya: status pending, is_active: false (butuh persetujuan Super Admin)
+    const profilePayload = {
+      id: authData.user.id,
+      email: email.value,
+      full_name: fullName.value,
+      role: isFirstAdmin ? 'super_admin' : 'employee',
+      is_active: isFirstAdmin,
+      status: isFirstAdmin ? 'active' : 'pending',
+      departemen: department.value || null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
     const { error: profileError } = await $supabase
       .from('admin_users')
-      .upsert({
-        id: authData.user.id,
-        email: email.value,
-        full_name: fullName.value,
-        role: isFirstAdmin ? 'super_admin' : 'employee',
-        is_active: isFirstAdmin,
-        status: isFirstAdmin ? 'active' : 'pending',
-        departemen: department.value || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
+      .upsert(profilePayload);
 
     if (profileError) {
+      // Profile insert gagal — rollback: hapus user dari auth agar tidak ada orphan account
       console.error('Error inserting admin_users record:', profileError);
-      // Even if direct profile insert fails due to trigger/RLS, check if RPC or session exists
+      await $supabase.auth.signOut();
+
+      // Berikan pesan spesifik berdasarkan kode error
+      if (profileError.code === '23514') {
+        // Check constraint violation (kolom role/status belum di-update)
+        throw new Error(
+          `Gagal menyimpan profil: nilai tidak valid (${profileError.message}). ` +
+          'Hubungi Super Admin untuk memperbarui schema database.'
+        );
+      } else if (profileError.code === '42703') {
+        // Kolom tidak ada (status/jabatan/departemen belum di-ALTER)
+        throw new Error(
+          'Gagal menyimpan profil: struktur database belum diperbarui. ' +
+          'Hubungi Super Admin untuk menjalankan SQL migration.'
+        );
+      } else if (profileError.code === '42501') {
+        // RLS policy blocking insert
+        throw new Error(
+          'Gagal menyimpan profil: akses ditolak (RLS). ' +
+          'Hubungi Super Admin untuk memperbarui kebijakan akses database.'
+        );
+      } else {
+        throw new Error(`Gagal menyimpan profil akun: ${profileError.message}`);
+      }
     }
 
     // 4. Sign out dari session pendaftaran agar tidak auto-login dalam status pending

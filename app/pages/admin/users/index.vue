@@ -127,7 +127,7 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else-if="!loading">
+    <div v-else-if="!loading" class="space-y-4">
       <EmptyState
         icon="person"
         title="Belum ada pengguna"
@@ -136,6 +136,22 @@
         variant="info"
         @action="showInviteModal = true"
       />
+
+      <!-- Debug Panel: tampil hanya jika ada fetchError -->
+      <div v-if="fetchError" class="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm space-y-2">
+        <div class="flex items-center gap-2 font-bold text-amber-800">
+          <span class="material-symbols-outlined text-lg">warning</span>
+          Info Debug (hanya terlihat oleh Admin)
+        </div>
+        <p class="text-amber-700">
+          Tabel <code class="bg-amber-100 px-1 rounded text-xs font-mono">admin_users</code> kosong atau RLS memblokir query.
+          Jalankan SQL migration <code class="bg-amber-100 px-1 rounded text-xs font-mono">fix_admin_users_schema.sql</code> di Supabase SQL Editor.
+        </p>
+        <details class="text-xs text-amber-600">
+          <summary class="cursor-pointer font-semibold hover:text-amber-800">Detail error teknis</summary>
+          <pre class="mt-2 bg-amber-100 rounded p-2 overflow-x-auto whitespace-pre-wrap">{{ fetchError }}</pre>
+        </details>
+      </div>
     </div>
 
     <!-- Approve User Modal -->
@@ -203,6 +219,7 @@ interface AdminUserRow {
 
 const users = ref<AdminUserRow[]>([]);
 const loading = ref(false);
+const fetchError = ref<string | null>(null);
 const showApproveModal = ref(false);
 const userToApprove = ref<AdminUserRow | null>(null);
 const approveLoading = ref(false);
@@ -240,6 +257,7 @@ const fetchUsers = async () => {
 
   loading.value = true;
   errorMessage.value = '';
+  fetchError.value = null;
 
   try {
     const { data, error } = await $supabase
@@ -261,8 +279,18 @@ const fetchUsers = async () => {
       created_at: u.created_at,
       avatar_url: u.avatar_url || ''
     }));
+
+    // Jika data kosong, simpan info untuk debug panel
+    if (users.value.length === 0) {
+      fetchError.value = 'Query berhasil tapi data kosong. Kemungkinan:\n' +
+        '1. RLS policy memblokir SELECT (jalankan fix_admin_users_schema.sql)\n' +
+        '2. Belum ada user yang berhasil mendaftar (insert ke admin_users gagal)\n' +
+        '3. Schema kolom status/role belum diperbarui';
+    }
   } catch (error: any) {
-    errorMessage.value = error.message || 'Gagal memuat data pengguna dari Supabase.';
+    const errMsg = error.message || 'Gagal memuat data pengguna dari Supabase.';
+    errorMessage.value = errMsg;
+    fetchError.value = `Code: ${error.code || 'unknown'}\nMessage: ${errMsg}\nDetails: ${error.details || '-'}\nHint: ${error.hint || '-'}`;
     console.error('Failed to fetch users:', error);
   } finally {
     loading.value = false;
