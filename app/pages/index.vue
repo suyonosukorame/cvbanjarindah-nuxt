@@ -2,8 +2,8 @@
   <div>
     <!-- 1. Hero Section -->
     <SectionsHeroSection
-      title="CV Banjar Indah"
-      subtitle="Distributor Terpercaya Produk Berkualitas di Kalimantan"
+      title="CV. Banjar Indah"
+      subtitle="Suplier & Mitra Usaha Terpercaya di Kalsel-Teng (Banjarmasin)"
       cta-text="Hubungi Kami"
       cta-link="/kontak"
     />
@@ -21,7 +21,7 @@
         title="Produk Kami"
         subtitle="Berbagai kategori produk berkualitas untuk kebutuhan toko Anda"
         :products="products"
-        :categories="['Semua', 'Tissue', 'Masker', 'Bayi']"
+        :categories="['Semua', 'Kesehatan', 'Kosmetik', 'Bayi', 'Garment', 'Elektronik', 'Kelontongan']"
       />
     </section>
 

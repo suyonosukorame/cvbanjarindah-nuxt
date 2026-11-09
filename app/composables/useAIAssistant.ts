@@ -36,7 +36,7 @@ export const useAIAssistant = () => {
       // This is a placeholder - will be replaced with actual API call
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const aiResponse = 'Terima kasih atas pertanyaan Anda. Untuk informasi harga grosir dan stok terkini, silakan hubungi kami via WhatsApp di menu **Kontak**.';
+      const aiResponse = 'Terima kasih atas pertanyaan Anda! CV. Banjar Indah adalah suplier & mitra usaha di Kalsel-Teng untuk produk Kesehatan, Kosmetik, Baby, Garment, Elektronik, dan Kelontongan berbasis di Banjarmasin. Untuk informasi harga grosir, katalog, dan stok terkini, silakan hubungi kami via WhatsApp di **0851-2450-2615** (Jam operasional: 08.30 - 17.00 WITA | Minggu Tutup).';
 
       messages.value.push({
         role: 'ai',

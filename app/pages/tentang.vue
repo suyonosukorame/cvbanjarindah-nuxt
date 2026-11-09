@@ -4,8 +4,8 @@
     <SectionsHeroSection
       variant="gradient"
       size="large"
-      title="Tentang CV Banjar Indah"
-      subtitle="Distributor terpercaya produk berkualitas di Kalimantan sejak tahun 2010"
+      title="Tentang CV. Banjar Indah"
+      subtitle="Suplier & Mitra Usaha Terpercaya di Kalsel-Teng berbasis di Banjarmasin sejak tahun 2010"
     />
 
     <!-- About Content -->

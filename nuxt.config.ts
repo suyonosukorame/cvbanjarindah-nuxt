@@ -54,11 +54,12 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'CV Banjar Indah - Distributor Produk Berkualitas',
+      title: 'CV. Banjar Indah - Suplier & Mitra Usaha di Kalsel-Teng',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'description', content: 'CV Banjar Indah - Distributor terpercaya produk tissue, masker, dan perlengkapan bayi di Kalimantan' },
+        { name: 'description', content: 'CV. Banjar Indah - Suplier & Mitra Usaha di Kalsel-Teng. Distributor resmi produk Kesehatan, Kosmetik/Kecantikan, Baby, Garment, Elektronik, dan Kelontongan berbasis di Banjarmasin.' },
+        { name: 'keywords', content: 'CV Banjar Indah, distributor banjarmasin, suplier kalsel teng, distributor kosmetik banjarmasin, distributor baby kalsel, grosir kelontong banjarmasin, distributor kesehatan' },
         { name: 'theme-color', content: '#ff5910' },
       ],
       link: [

@@ -18,12 +18,13 @@
       <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
         <!-- WhatsApp CTA (Primary) -->
         <a 
-          href="https://wa.me/62"
+          href="https://wa.me/6285124502615?text=Halo%20CV%20Banjar%20Indah,%20saya%20tertarik%20untuk%20kemitraan/order."
           target="_blank"
+          rel="noopener noreferrer"
           class="inline-flex items-center gap-3 px-8 py-4 bg-green-500 hover:bg-green-600 text-white font-bold rounded-xl shadow-2xl hover:scale-105 transition-all duration-300"
         >
           <span class="material-symbols-outlined text-2xl">chat</span>
-          <span>Chat via WhatsApp</span>
+          <span>WhatsApp (0851-2450-2615)</span>
         </a>
         
         <!-- Contact Form CTA (Secondary) -->
