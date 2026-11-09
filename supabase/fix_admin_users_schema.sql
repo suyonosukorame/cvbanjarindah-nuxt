@@ -115,3 +115,4 @@ SELECT
   created_at
 FROM public.admin_users
 ORDER BY created_at DESC;
+
