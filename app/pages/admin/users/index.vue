@@ -54,13 +54,13 @@
     </div>
 
     <!-- Alert Messages -->
-    <Alert
+    <MoleculesAlert
       v-if="successMessage"
       type="success"
       :message="successMessage"
       @close="successMessage = ''"
     />
-    <Alert
+    <MoleculesAlert
       v-if="errorMessage"
       type="error"
       :message="errorMessage"
@@ -69,7 +69,7 @@
 
     <!-- Users Table -->
     <div v-if="users.length > 0">
-      <UserManagementTable
+      <OrganismsUserManagementTable
         :users="users"
         :roles="availableRoles"
         :loading="loading"
@@ -116,12 +116,12 @@
             Hapus Dipilih ({{ selected.length }})
           </button>
         </template>
-      </UserManagementTable>
+      </OrganismsUserManagementTable>
     </div>
 
     <!-- Empty State -->
     <div v-else-if="!loading" class="space-y-4">
-      <EmptyState
+      <MoleculesEmptyState
         icon="person"
         title="Belum ada pengguna"
         description="Belum ada data admin terdaftar. Pengguna baru dapat mendaftar melalui halaman pendaftaran dan menunggu persetujuan Super Admin."
@@ -155,7 +155,7 @@
     />
 
     <!-- Delete Confirmation -->
-    <ConfirmDialog
+    <MoleculesConfirmDialog
       :visible="showDeleteConfirm"
       title="Hapus Pengguna"
       :message="`Apakah Anda yakin ingin menghapus pengguna ${userToDelete?.name || userToDelete?.email}? Tindakan ini tidak dapat dibatalkan.`"
@@ -165,7 +165,7 @@
     />
 
     <!-- Bulk Delete Confirmation -->
-    <ConfirmDialog
+    <MoleculesConfirmDialog
       :visible="showBulkDeleteConfirm"
       title="Hapus Pengguna Terpilih"
       :message="`Apakah Anda yakin ingin menghapus ${selectedUsers.size} pengguna yang dipilih? Tindakan ini tidak dapat dibatalkan.`"

@@ -87,7 +87,7 @@
             <!-- User info with avatar -->
             <td class="px-4 py-3 text-sm">
               <div class="flex items-center gap-3">
-                <UserAvatar :name="user.name" :url="user.avatar_url" size="sm" />
+                <AtomsUserAvatar :name="user.name" :image="user.avatar_url" size="sm" compact />
                 <span class="font-medium text-slate-900">{{ user.name }}</span>
               </div>
             </td>
@@ -99,12 +99,12 @@
 
             <!-- Role -->
             <td class="px-4 py-3 text-sm">
-              <RoleBadge :role="user.role" />
+              <AtomsRoleBadge :role="user.role" />
             </td>
 
             <!-- Status -->
             <td class="px-4 py-3 text-sm">
-              <StatusBadge :status="user.status" />
+              <AtomsStatusBadge :status="user.status" />
             </td>
 
             <!-- Joined date -->
@@ -125,7 +125,7 @@
         v-if="filteredUsers.length === 0"
         class="flex items-center justify-center p-8"
       >
-        <EmptyState
+        <MoleculesEmptyState
           icon="person_off"
           title="Tidak ada pengguna"
           description="Belum ada pengguna dengan kriteria pencarian ini"
