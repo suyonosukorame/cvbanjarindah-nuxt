@@ -3,12 +3,24 @@ CREATE TABLE IF NOT EXISTS public.admin_users (
   email VARCHAR(255) UNIQUE NOT NULL,
   full_name VARCHAR(255),
   avatar_url TEXT,
-  role VARCHAR(50) NOT NULL DEFAULT 'admin' CHECK (role IN ('super_admin', 'admin', 'editor')),
+  role VARCHAR(50) NOT NULL DEFAULT 'admin' CHECK (role IN ('super_admin', 'admin', 'editor', 'director', 'manager', 'employee')),
   is_active BOOLEAN NOT NULL DEFAULT true,
+  status VARCHAR(50) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'pending', 'inactive', 'on_leave', 'terminated')),
   last_login_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.admin_users
+  ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'active';
+ALTER TABLE public.admin_users DROP CONSTRAINT IF EXISTS admin_users_role_check;
+ALTER TABLE public.admin_users
+  ADD CONSTRAINT admin_users_role_check
+  CHECK (role IN ('super_admin', 'admin', 'editor', 'director', 'manager', 'employee'));
+ALTER TABLE public.admin_users DROP CONSTRAINT IF EXISTS admin_users_status_check;
+ALTER TABLE public.admin_users
+  ADD CONSTRAINT admin_users_status_check
+  CHECK (status IN ('active', 'pending', 'inactive', 'on_leave', 'terminated'));
 
 CREATE TABLE IF NOT EXISTS public.categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -165,6 +177,19 @@ AS $$
   );
 $$;
 
+CREATE OR REPLACE FUNCTION public.is_super_admin()
+RETURNS BOOLEAN
+LANGUAGE SQL
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE id = auth.uid() AND role = 'super_admin' AND is_active = true
+  );
+$$;
+
 CREATE OR REPLACE FUNCTION public.is_initial_super_admin_available()
 RETURNS BOOLEAN
 LANGUAGE SQL
@@ -200,8 +225,8 @@ BEGIN
     RETURN false;
   END IF;
 
-  INSERT INTO public.admin_users (id, email, full_name, role, is_active)
-  SELECT id, email, raw_user_meta_data ->> 'full_name', 'super_admin', true
+  INSERT INTO public.admin_users (id, email, full_name, role, is_active, status)
+  SELECT id, email, raw_user_meta_data ->> 'full_name', 'super_admin', true, 'active'
   FROM auth.users
   WHERE id = current_user_id
   ON CONFLICT (id) DO UPDATE
@@ -209,6 +234,7 @@ BEGIN
         full_name = COALESCE(EXCLUDED.full_name, public.admin_users.full_name),
         role = 'super_admin',
         is_active = true,
+        status = 'active',
         updated_at = NOW();
 
   RETURN true;
@@ -217,6 +243,8 @@ $$;
 
 REVOKE ALL ON FUNCTION public.is_active_admin() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.is_active_admin() TO authenticated;
+REVOKE ALL ON FUNCTION public.is_super_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated;
 REVOKE ALL ON FUNCTION public.is_initial_super_admin_available() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.is_initial_super_admin_available() TO anon, authenticated;
 REVOKE ALL ON FUNCTION public.claim_initial_super_admin() FROM PUBLIC;
@@ -232,6 +260,12 @@ ALTER TABLE public.testimonials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.pricing_plans ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Admins can read their own profile" ON public.admin_users;
+DROP POLICY IF EXISTS "Allow authenticated insert own profile" ON public.admin_users;
+DROP POLICY IF EXISTS "Allow authenticated read admin_users" ON public.admin_users;
+DROP POLICY IF EXISTS "Super admins can read admin users" ON public.admin_users;
+DROP POLICY IF EXISTS "Allow update own profile or super admin" ON public.admin_users;
+DROP POLICY IF EXISTS "Super admins can update admin users" ON public.admin_users;
+DROP POLICY IF EXISTS "Allow delete only super admin" ON public.admin_users;
 DROP POLICY IF EXISTS "Active admins manage categories" ON public.categories;
 DROP POLICY IF EXISTS "Active admins manage brands" ON public.brands;
 DROP POLICY IF EXISTS "Active admins manage products" ON public.products;
@@ -252,7 +286,21 @@ DROP POLICY IF EXISTS "Active admins update media" ON storage.objects;
 DROP POLICY IF EXISTS "Active admins delete media" ON storage.objects;
 
 CREATE POLICY "Admins can read their own profile" ON public.admin_users
-  FOR SELECT TO authenticated USING (id = auth.uid());
+  FOR SELECT TO authenticated USING (id = auth.uid() OR public.is_super_admin());
+CREATE POLICY "Allow authenticated insert own profile" ON public.admin_users
+  FOR INSERT TO authenticated
+  WITH CHECK (
+    id = auth.uid()
+    AND role = 'employee'
+    AND status = 'pending'
+    AND is_active = false
+  );
+CREATE POLICY "Super admins can update admin users" ON public.admin_users
+  FOR UPDATE TO authenticated
+  USING (public.is_super_admin())
+  WITH CHECK (public.is_super_admin());
+CREATE POLICY "Allow delete only super admin" ON public.admin_users
+  FOR DELETE TO authenticated USING (public.is_super_admin());
 
 CREATE POLICY "Active admins manage categories" ON public.categories
   FOR ALL TO authenticated USING (public.is_active_admin()) WITH CHECK (public.is_active_admin());

@@ -65,7 +65,48 @@ AS $$
 $$;
 
 REVOKE ALL ON FUNCTION public.is_super_admin() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.is_super_admin() TO authenticated;
+
+CREATE OR REPLACE FUNCTION public.claim_initial_super_admin()
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  current_user_id UUID := auth.uid();
+BEGIN
+  IF current_user_id IS NULL THEN
+    RAISE EXCEPTION 'Login diperlukan untuk mengklaim admin pertama.';
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtext('cvbanjarindah_initial_super_admin'));
+
+  IF EXISTS (
+    SELECT 1 FROM public.admin_users
+    WHERE role = 'super_admin' AND is_active = true
+  ) THEN
+    RETURN false;
+  END IF;
+
+  INSERT INTO public.admin_users (id, email, full_name, role, is_active, status)
+  SELECT id, email, raw_user_meta_data ->> 'full_name', 'super_admin', true, 'active'
+  FROM auth.users
+  WHERE id = current_user_id
+  ON CONFLICT (id) DO UPDATE
+    SET email = EXCLUDED.email,
+        full_name = COALESCE(EXCLUDED.full_name, public.admin_users.full_name),
+        role = 'super_admin',
+        is_active = true,
+        status = 'active',
+        updated_at = NOW();
+
+  RETURN true;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.claim_initial_super_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.claim_initial_super_admin() TO authenticated;
 
 -- Pastikan RLS aktif pada admin_users
 ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
@@ -74,21 +115,26 @@ ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
 -- STEP 6: Pasang Policy Baru (Bebas Rekursi 100%)
 -- ============================================================================
 
--- Policy 1: User yang mendaftar bisa INSERT profil dirinya sendiri
+-- Policy 1: Pendaftaran hanya dapat membuat profil staf yang masih menunggu.
 CREATE POLICY "Allow authenticated insert own profile" ON public.admin_users
   FOR INSERT TO authenticated
-  WITH CHECK (id = auth.uid());
+  WITH CHECK (
+    id = auth.uid()
+    AND role = 'employee'
+    AND status = 'pending'
+    AND is_active = false
+  );
 
--- Policy 2: Semua staf yang sudah LOGIN (authenticated) boleh membaca daftar admin
--- (Menggunakan USING (true) sehingga MUSTAHIL terjadi loop rekursi / error 42P17)
-CREATE POLICY "Allow authenticated read admin_users" ON public.admin_users
+-- Policy 2: Pengguna membaca profilnya sendiri; Super Admin membaca semua akun.
+CREATE POLICY "Super admins can read admin users" ON public.admin_users
   FOR SELECT TO authenticated
-  USING (true);
-
--- Policy 3: Hanya diri sendiri atau Super Admin yang boleh UPDATE profil
-CREATE POLICY "Allow update own profile or super admin" ON public.admin_users
-  FOR UPDATE TO authenticated
   USING (id = auth.uid() OR public.is_super_admin());
+
+-- Policy 3: Hanya Super Admin yang boleh mengubah profil/status pengguna.
+CREATE POLICY "Super admins can update admin users" ON public.admin_users
+  FOR UPDATE TO authenticated
+  USING (public.is_super_admin())
+  WITH CHECK (public.is_super_admin());
 
 -- Policy 4: Hanya Super Admin yang boleh DELETE user
 CREATE POLICY "Allow delete only super admin" ON public.admin_users

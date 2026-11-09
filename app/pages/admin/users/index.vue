@@ -17,13 +17,6 @@
           Segarkan
         </button>
 
-        <button
-          @click="showInviteModal = true"
-          class="flex items-center justify-center gap-2 px-4 py-2 text-white bg-primary rounded-lg hover:bg-orange-600 transition-colors shadow-sm text-sm font-medium"
-        >
-          <span class="material-symbols-outlined text-lg">person_add</span>
-          Undang Pengguna
-        </button>
       </div>
     </div>
 
@@ -131,10 +124,8 @@
       <EmptyState
         icon="person"
         title="Belum ada pengguna"
-        description="Belum ada data admin terdaftar. Pengguna baru dapat mendaftar melalui halaman signup."
-        action-label="Undang Pengguna"
+        description="Belum ada data admin terdaftar. Pengguna baru dapat mendaftar melalui halaman pendaftaran dan menunggu persetujuan Super Admin."
         variant="info"
-        @action="showInviteModal = true"
       />
 
       <!-- Debug Panel: tampil hanya jika ada fetchError -->
@@ -161,13 +152,6 @@
       :loading="approveLoading"
       @close="showApproveModal = false"
       @approve="handleApproveSubmit"
-    />
-
-    <!-- Invite Modal -->
-    <InviteUserModal
-      :visible="showInviteModal"
-      @close="showInviteModal = false"
-      @submit="handleInviteSubmit"
     />
 
     <!-- Delete Confirmation -->
@@ -224,7 +208,6 @@ const showApproveModal = ref(false);
 const userToApprove = ref<AdminUserRow | null>(null);
 const approveLoading = ref(false);
 
-const showInviteModal = ref(false);
 const showDeleteConfirm = ref(false);
 const showBulkDeleteConfirm = ref(false);
 const userToDelete = ref<AdminUserRow | null>(null);
@@ -332,36 +315,6 @@ const handleApproveSubmit = async (payload: { id: string; role: string; departem
     console.error('Failed to approve user:', error);
   } finally {
     approveLoading.value = false;
-  }
-};
-
-// Handle invite user (manual insertion into admin_users with active or pending state)
-const handleInviteSubmit = async (form: any) => {
-  if (!$supabase) return;
-
-  try {
-    // Generate UUID for user or invitation
-    const { error } = await $supabase
-      .from('admin_users')
-      .insert({
-        email: form.email,
-        full_name: form.name,
-        role: form.role || 'admin',
-        departemen: form.department || null,
-        is_active: true,
-        status: 'active',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-
-    if (error) throw error;
-
-    successMessage.value = `Pengguna ${form.name} (${form.email}) berhasil ditambahkan!`;
-    showInviteModal.value = false;
-    await fetchUsers();
-  } catch (error: any) {
-    errorMessage.value = error.message || 'Gagal menambahkan pengguna.';
-    console.error('Failed to invite user:', error);
   }
 };
 

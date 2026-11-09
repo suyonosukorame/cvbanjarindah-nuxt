@@ -189,18 +189,7 @@ const handleSignUp = async () => {
   errorMessage.value = '';
 
   try {
-    // 1. Cek apakah sudah ada admin terdaftar di sistem
-    const { count: adminCount, error: countError } = await $supabase
-      .from('admin_users')
-      .select('*', { count: 'exact', head: true });
-
-    if (countError) {
-      console.warn('Could not count admin_users, assuming standard signup:', countError.message);
-    }
-
-    const isFirstAdmin = !adminCount || adminCount === 0;
-
-    // 2. Daftar via Supabase Auth
+    // Daftar via Supabase Auth
     const { data: authData, error: authError } = await $supabase.auth.signUp({
       email: email.value,
       password: password.value,
@@ -217,16 +206,15 @@ const handleSignUp = async () => {
       throw new Error('Gagal membuat user di Supabase Auth.');
     }
 
-    // 3. Masukkan profil ke tabel admin_users
-    // Jika admin pertama: langsung active & super_admin
-    // Jika admin berikutnya: status pending, is_active: false (butuh persetujuan Super Admin)
+    // Semua pendaftaran dimulai sebagai pending. RPC hanya mengaktifkan admin
+    // pertama secara atomik jika sistem memang belum memiliki Super Admin.
     const profilePayload = {
       id: authData.user.id,
       email: email.value,
       full_name: fullName.value,
-      role: isFirstAdmin ? 'super_admin' : 'employee',
-      is_active: isFirstAdmin,
-      status: isFirstAdmin ? 'active' : 'pending',
+      role: 'employee',
+      is_active: false,
+      status: 'pending',
       departemen: department.value || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -265,11 +253,15 @@ const handleSignUp = async () => {
       }
     }
 
-    // 4. Sign out dari session pendaftaran agar tidak auto-login dalam status pending
+    const { data: claimedInitialAdmin, error: claimError } = await $supabase
+      .rpc('claim_initial_super_admin');
+
+    if (claimError) throw claimError;
+
+    // Sign out agar pengguna pending tidak langsung masuk ke portal admin.
     await $supabase.auth.signOut();
 
-    // 5. Redirect ke Login dengan status yang sesuai
-    const redirectStatus = isFirstAdmin ? 'super_admin' : 'pending';
+    const redirectStatus = claimedInitialAdmin ? 'super_admin' : 'pending';
     await navigateTo(`/admin/login?status=${redirectStatus}`);
   } catch (err) {
     console.error('Signup error:', err);

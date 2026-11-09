@@ -70,7 +70,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="user in filteredUsers"
+            v-for="user in paginatedUsers"
             :key="user.id"
             class="border-b border-slate-200 hover:bg-slate-50 transition-colors"
           >
@@ -135,7 +135,7 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="pagination" class="flex items-center justify-between text-sm text-slate-600">
+    <div v-if="pagination && filteredUsers.length > 0" class="flex items-center justify-between text-sm text-slate-600">
       <span>
         Menampilkan {{ startIndex + 1 }} hingga {{ endIndex }} dari {{ filteredUsers.length }} pengguna
       </span>
@@ -187,7 +187,7 @@ interface User {
   id: string
   name: string
   email: string
-  role: 'super_admin' | 'admin' | 'supervisor' | 'staff' | 'guest'
+  role: 'super_admin' | 'admin' | 'director' | 'manager' | 'editor' | 'employee' | 'supervisor' | 'staff' | 'guest'
   status: 'active' | 'inactive' | 'pending'
   avatar_url?: string
   created_at: string
@@ -234,15 +234,18 @@ const filteredUsers = computed(() => {
     filtered = filtered.filter(user => user.status === selectedStatus.value)
   }
 
-  // Pagination
-  if (!props.pagination) return filtered
+  return filtered
+})
+
+const paginatedUsers = computed(() => {
+  if (!props.pagination) return filteredUsers.value
 
   const start = currentPage.value * props.pageSize
-  return filtered.slice(start, start + props.pageSize)
+  return filteredUsers.value.slice(start, start + props.pageSize)
 })
 
 const totalPages = computed(() => {
-  return Math.ceil(filteredUsers.value.length / props.pageSize)
+  return Math.max(1, Math.ceil(filteredUsers.value.length / props.pageSize))
 })
 
 const startIndex = computed(() => currentPage.value * props.pageSize)
@@ -296,7 +299,7 @@ defineExpose({
   clearSelection
 })
 
-defineEmits<{
+const emit = defineEmits<{
   'selection-change': [selected: Set<string>]
 }>()
 
@@ -304,9 +307,13 @@ watch(selectedUsers, (newSelected) => {
   emit('selection-change', newSelected)
 }, { deep: true })
 
-const emit = defineEmits<{
-  'selection-change': [selected: Set<string>]
-}>()
+watch([searchQuery, selectedRole, selectedStatus], () => {
+  currentPage.value = 0
+})
+
+watch(() => props.users.length, () => {
+  currentPage.value = 0
+})
 </script>
 
 <style scoped>
