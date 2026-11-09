@@ -1,10 +1,16 @@
 export interface AdminField {
   key: string;
   label: string;
-  type?: 'text' | 'url' | 'email' | 'number' | 'textarea' | 'boolean' | 'select' | 'list' | 'image';
+  type?: 'text' | 'url' | 'email' | 'number' | 'textarea' | 'boolean' | 'select' | 'list' | 'image' | 'relation';
   required?: boolean;
   options?: Array<{ label: string; value: string }>;
   bucket?: string;
+  /** Auto-generate value dari field lain. Contoh: autoFrom: 'name' untuk slug */
+  autoFrom?: string;
+  /** Untuk type 'relation': nama tabel di Supabase */
+  relationTable?: string;
+  /** Untuk type 'relation': kolom yang ditampilkan sebagai label di dropdown */
+  relationLabel?: string;
 }
 
 export interface AdminResource {
@@ -25,7 +31,7 @@ export const adminResources: Record<string, AdminResource> = {
   products: {
     label: 'Produk', table: 'products', searchable: ['name', 'slug'],
     fields: [
-      // Table visible columns (first 4) - OPSI 1
+      // Table visible columns (first 4)
       { key: 'image_url', label: 'Gambar', type: 'image', bucket: 'products' },
       { key: 'name', label: 'Nama produk', required: true },
       { key: 'price', label: 'Harga', type: 'number' },
@@ -33,10 +39,10 @@ export const adminResources: Record<string, AdminResource> = {
         { label: 'Aktif', value: 'active' }, { label: 'Nonaktif', value: 'inactive' }, { label: 'Draft', value: 'draft' },
       ] },
       // Other fields (form/edit view)
-      { key: 'slug', label: 'Slug', required: true },
+      { key: 'slug', label: 'Slug', required: true, autoFrom: 'name' },
       { key: 'description', label: 'Deskripsi', type: 'textarea' },
-      { key: 'category_id', label: 'ID kategori' },
-      { key: 'brand_id', label: 'ID brand' },
+      { key: 'category_id', label: 'Kategori', type: 'relation', relationTable: 'categories', relationLabel: 'name' },
+      { key: 'brand_id', label: 'Brand', type: 'relation', relationTable: 'brands', relationLabel: 'name' },
       { key: 'stock', label: 'Stok', type: 'number' },
       { key: 'is_featured', label: 'Produk unggulan', type: 'boolean' },
     ],
@@ -44,13 +50,13 @@ export const adminResources: Record<string, AdminResource> = {
   categories: {
     label: 'Kategori', table: 'categories', searchable: ['name', 'slug'],
     fields: [
-      // Table visible columns (first 4) - OPSI 1
+      // Table visible columns (first 4)
       { key: 'image_url', label: 'Gambar', type: 'image', bucket: 'categories' },
       { key: 'name', label: 'Nama kategori', required: true },
       { key: 'sort_order', label: 'Urutan', type: 'number' },
       { key: 'is_active', label: 'Aktif', type: 'boolean' },
       // Other fields (form/edit view)
-      { key: 'slug', label: 'Slug', required: true },
+      { key: 'slug', label: 'Slug', required: true, autoFrom: 'name' },
       { key: 'description', label: 'Deskripsi', type: 'textarea' },
       { key: 'icon', label: 'Ikon Material' },
     ],
@@ -58,13 +64,13 @@ export const adminResources: Record<string, AdminResource> = {
   brands: {
     label: 'Brand', table: 'brands', searchable: ['name', 'slug'],
     fields: [
-      // Table visible columns (first 4) - OPSI 1
+      // Table visible columns (first 4)
       { key: 'logo_url', label: 'Logo', type: 'image', bucket: 'brands', required: true },
       { key: 'name', label: 'Nama brand', required: true },
       { key: 'sort_order', label: 'Urutan', type: 'number' },
       { key: 'is_active', label: 'Aktif', type: 'boolean' },
       // Other fields (form/edit view)
-      { key: 'slug', label: 'Slug', required: true },
+      { key: 'slug', label: 'Slug', required: true, autoFrom: 'name' },
       { key: 'website_url', label: 'Website', type: 'url' },
       { key: 'description', label: 'Deskripsi', type: 'textarea' },
       { key: 'is_featured', label: 'Brand unggulan', type: 'boolean' },
@@ -73,7 +79,7 @@ export const adminResources: Record<string, AdminResource> = {
   areas: {
     label: 'Area distribusi', table: 'distribution_areas', searchable: ['name', 'province', 'city'],
     fields: [
-      { key: 'name', label: 'Nama area', required: true }, 
+      { key: 'name', label: 'Nama area', required: true },
       { key: 'province', label: 'Provinsi', required: true },
       { key: 'coverage_type', label: 'Tipe cakupan', type: 'select', options: [
         { label: 'Kota', value: 'city' }, { label: 'Provinsi', value: 'province' }, { label: 'Wilayah', value: 'region' },
@@ -87,7 +93,7 @@ export const adminResources: Record<string, AdminResource> = {
     label: 'Pesan masuk', table: 'inquiries', searchable: ['name', 'email', 'company'],
     allowCreate: false, allowDelete: false,
     fields: [
-      { key: 'name', label: 'Nama', required: true }, 
+      { key: 'name', label: 'Nama', required: true },
       { key: 'email', label: 'Email', type: 'email', required: true },
       { key: 'company', label: 'Perusahaan' },
       { key: 'status', label: 'Status', type: 'select', options: [
@@ -101,7 +107,7 @@ export const adminResources: Record<string, AdminResource> = {
   testimonials: {
     label: 'Testimoni', table: 'testimonials', searchable: ['customer_name', 'customer_company'],
     fields: [
-      // Table visible columns (first 4) - OPSI 1
+      // Table visible columns (first 4)
       { key: 'customer_avatar', label: 'Foto', type: 'image', bucket: 'testimonials' },
       { key: 'customer_name', label: 'Nama pelanggan', required: true },
       { key: 'rating', label: 'Rating', type: 'number', required: true },
@@ -115,11 +121,11 @@ export const adminResources: Record<string, AdminResource> = {
   pricing: {
     label: 'Paket harga', table: 'pricing_plans', searchable: ['name', 'slug'],
     fields: [
-      { key: 'name', label: 'Nama paket', required: true }, 
+      { key: 'name', label: 'Nama paket', required: true },
       { key: 'price', label: 'Harga', type: 'number' },
       { key: 'is_popular', label: 'Populer', type: 'boolean' },
       { key: 'is_active', label: 'Aktif', type: 'boolean' },
-      { key: 'slug', label: 'Slug', required: true },
+      { key: 'slug', label: 'Slug', required: true, autoFrom: 'name' },
       { key: 'description', label: 'Deskripsi', type: 'textarea' },
       { key: 'features', label: 'Fitur (satu per baris)', type: 'list' },
       { key: 'min_order', label: 'Minimum order', type: 'number' },

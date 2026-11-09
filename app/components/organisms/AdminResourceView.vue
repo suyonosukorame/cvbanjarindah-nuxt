@@ -61,72 +61,118 @@
       <div v-if="isFormView" class="rounded-lg border border-slate-200 bg-white p-4 sm:p-6">
         <form class="space-y-6" @submit.prevent="save">
           <div class="grid gap-5 md:grid-cols-2">
-            <label 
-              v-for="field in resource.fields" 
-              :key="field.key" 
-              :class="['block space-y-2', field.type === 'textarea' || field.type === 'list' ? 'md:col-span-2' : '']"
-            >
-              <span class="text-sm font-semibold text-slate-700">
-                {{ field.label }}
-                <span v-if="field.required" class="ml-1 text-red-500">*</span>
-              </span>
-
-              <!-- Image Upload -->
-              <AtomsFileUpload 
-                v-if="field.type === 'image'" 
-                v-model="form[field.key]" 
-                :disabled="saving" 
-                @upload="uploadImage(field, $event)" 
-                @error="errorMessage = $event" 
-              />
-
-              <!-- Textarea / List -->
-              <textarea 
-                v-else-if="field.type === 'textarea' || field.type === 'list'" 
-                v-model="form[field.key]" 
-                :rows="field.type === 'list' ? 5 : 4" 
-                :required="field.required" 
-                :readonly="isInquiryReadOnly(field.key)" 
-                :placeholder="field.type === 'list' ? 'Satu item per baris' : ''" 
-                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50"
-              />
-
-              <!-- Boolean / Select Dropdown -->
-              <select 
-                v-else-if="field.type === 'boolean' || field.type === 'select'" 
-                :value="field.type === 'boolean' ? (form[field.key] ? 'true' : 'false') : form[field.key]"
-                :disabled="isInquiryReadOnly(field.key)" 
-                class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-slate-50"
-                @change="field.type === 'boolean' ? (form[field.key] = ($event.target as HTMLSelectElement).value === 'true') : (form[field.key] = ($event.target as HTMLSelectElement).value)"
+            <template v-for="field in resource.fields" :key="field.key">
+              <!-- Skip auto-generated fields (slug, dll) — ditampilkan sebagai preview readonly -->
+              <label 
+                v-if="field.autoFrom"
+                :class="['block space-y-2']"
               >
-                <option v-if="field.type === 'boolean'" value="true">Ya</option>
-                <option v-if="field.type === 'boolean'" value="false">Tidak</option>
-                <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</option>
-              </select>
+                <span class="text-sm font-semibold text-slate-700">
+                  {{ field.label }}
+                  <span class="ml-1.5 inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-600">
+                    <span class="material-symbols-outlined text-xs" style="font-size:12px">auto_fix_high</span>
+                    Otomatis
+                  </span>
+                </span>
+                <div class="flex h-10 w-full items-center rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-500">
+                  <span v-if="form[field.key]">{{ form[field.key] }}</span>
+                  <span v-else class="italic text-slate-400">Akan otomatis dibuat dari nama…</span>
+                </div>
+              </label>
 
-              <!-- Currency Input -->
-              <AtomsCurrencyInput 
-                v-else-if="field.type === 'number' && (field.key.includes('price') || field.key.includes('harga') || field.key.includes('biaya'))" 
-                v-model="form[field.key]" 
-                :required="field.required" 
-                :disabled="saving || isInquiryReadOnly(field.key)" 
-                :placeholder="`0`" 
-                show-preview 
-              />
+              <!-- Render field normal (semua kecuali autoFrom) -->
+              <label 
+                v-else
+                :class="['block space-y-2', field.type === 'textarea' || field.type === 'list' ? 'md:col-span-2' : '']"
+              >
+                <span class="text-sm font-semibold text-slate-700">
+                  {{ field.label }}
+                  <span v-if="field.required" class="ml-1 text-red-500">*</span>
+                </span>
 
-              <!-- Text / Number Input -->
-              <input 
-                v-else-if="field.type !== 'image'" 
-                v-model="form[field.key]" 
-                :type="field.type === 'number' ? 'number' : field.type || 'text'" 
-                :min="field.key === 'rating' ? 1 : undefined" 
-                :max="field.key === 'rating' ? 5 : undefined" 
-                :required="field.required" 
-                :readonly="isInquiryReadOnly(field.key)" 
-                :step="field.type === 'number' ? 'any' : undefined" 
-                class="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50"
-              />
-            </label>
+                <!-- Image Upload -->
+                <AtomsFileUpload 
+                  v-if="field.type === 'image'" 
+                  v-model="form[field.key]" 
+                  :disabled="saving" 
+                  @upload="uploadImage(field, $event)" 
+                  @error="errorMessage = $event" 
+                />
+
+                <!-- Textarea / List -->
+                <textarea 
+                  v-else-if="field.type === 'textarea' || field.type === 'list'" 
+                  v-model="form[field.key]" 
+                  :rows="field.type === 'list' ? 5 : 4" 
+                  :required="field.required" 
+                  :readonly="isInquiryReadOnly(field.key)" 
+                  :placeholder="field.type === 'list' ? 'Satu item per baris' : ''" 
+                  class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50"
+                />
+
+                <!-- Relation Dropdown (foreign key) -->
+                <div v-else-if="field.type === 'relation'" class="relative">
+                  <select 
+                    v-model="form[field.key]"
+                    class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-slate-50"
+                    :disabled="saving || relationLoading[field.key]"
+                  >
+                    <option value="">
+                      {{ relationLoading[field.key] ? 'Memuat data...' : `— Pilih ${field.label} —` }}
+                    </option>
+                    <option 
+                      v-for="opt in relationOptions[field.key]" 
+                      :key="opt.value" 
+                      :value="opt.value"
+                    >
+                      {{ opt.label }}
+                    </option>
+                  </select>
+                  <span 
+                    v-if="relationLoading[field.key]"
+                    class="material-symbols-outlined animate-spin absolute right-8 top-2 text-lg text-slate-400"
+                  >
+                    progress_activity
+                  </span>
+                </div>
+
+                <!-- Boolean / Select Dropdown -->
+                <select 
+                  v-else-if="field.type === 'boolean' || field.type === 'select'" 
+                  :value="field.type === 'boolean' ? (form[field.key] ? 'true' : 'false') : form[field.key]"
+                  :disabled="isInquiryReadOnly(field.key)" 
+                  class="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-slate-50"
+                  @change="field.type === 'boolean' ? (form[field.key] = ($event.target as HTMLSelectElement).value === 'true') : (form[field.key] = ($event.target as HTMLSelectElement).value)"
+                >
+                  <option v-if="field.type === 'boolean'" value="true">Ya</option>
+                  <option v-if="field.type === 'boolean'" value="false">Tidak</option>
+                  <option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</option>
+                </select>
+
+                <!-- Currency Input -->
+                <AtomsCurrencyInput 
+                  v-else-if="field.type === 'number' && (field.key.includes('price') || field.key.includes('harga') || field.key.includes('biaya'))" 
+                  v-model="form[field.key]" 
+                  :required="field.required" 
+                  :disabled="saving || isInquiryReadOnly(field.key)" 
+                  :placeholder="`0`" 
+                  show-preview 
+                />
+
+                <!-- Text / Number Input -->
+                <input 
+                  v-else-if="field.type !== 'image'" 
+                  v-model="form[field.key]" 
+                  :type="field.type === 'number' ? 'number' : field.type || 'text'" 
+                  :min="field.key === 'rating' ? 1 : undefined" 
+                  :max="field.key === 'rating' ? 5 : undefined" 
+                  :required="field.required" 
+                  :readonly="isInquiryReadOnly(field.key)" 
+                  :step="field.type === 'number' ? 'any' : undefined" 
+                  class="h-10 w-full rounded-lg border border-slate-300 px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 read-only:bg-slate-50"
+                />
+              </label>
+            </template>
           </div>
 
           <!-- Form Actions -->
@@ -293,6 +339,10 @@ const errorMessage = ref('');
 const currentPage = ref(1);
 const perPage = 10;
 
+// Relation dropdown state
+const relationOptions = ref<Record<string, Array<{ label: string; value: string }>>>({});
+const relationLoading = ref<Record<string, boolean>>({});
+
 const visibleFields = computed(() => (resource.value?.fields ?? []).slice(0, 4));
 const filteredRows = computed(() => {
   const query = search.value.trim().toLocaleLowerCase();
@@ -307,8 +357,20 @@ const displayValue = (value: unknown, field: AdminField) => {
   if (field.type === 'boolean') return value ? 'Aktif' : 'Nonaktif';
   if (value === null || value === undefined || value === '') return '-';
   if (field.type === 'select') return field.options?.find(option => option.value === String(value))?.label ?? String(value);
+  // Untuk relation field, tampilkan label dari cached options
+  if (field.type === 'relation') {
+    return relationOptions.value[field.key]?.find(opt => opt.value === String(value))?.label ?? String(value);
+  }
   return String(value);
 };
+
+/** Konversi string ke slug URL-safe */
+const toSlug = (text: string) =>
+  text.trim().toLocaleLowerCase()
+    .replace(/[àáâãäå]/g, 'a').replace(/[èéêë]/g, 'e')
+    .replace(/[ìíîï]/g, 'i').replace(/[òóôõö]/g, 'o')
+    .replace(/[ùúûü]/g, 'u').replace(/[ñ]/g, 'n')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 const resetForm = () => {
   const initial: Record<string, any> = {};
@@ -317,9 +379,42 @@ const resetForm = () => {
       ? field.key === 'is_active'
       : field.type === 'number' ? null
         : field.type === 'list' ? ''
-          : field.type === 'select' ? field.options?.[0]?.value ?? '' : '';
+          : field.type === 'select' ? field.options?.[0]?.value ?? '' 
+            : field.type === 'relation' ? ''
+              : '';
   }
   form.value = initial;
+};
+
+/** Fetch opsi dropdown untuk semua field bertipe 'relation' */
+const loadRelationOptions = async () => {
+  if (!$supabase || !resource.value) return;
+
+  const relationFields = resource.value.fields.filter(f => f.type === 'relation' && f.relationTable);
+
+  for (const field of relationFields) {
+    if (!field.relationTable) continue;
+    relationLoading.value[field.key] = true;
+
+    try {
+      const labelCol = field.relationLabel ?? 'name';
+      const { data, error } = await $supabase
+        .from(field.relationTable)
+        .select(`id, ${labelCol}`)
+        .order(labelCol, { ascending: true });
+
+      if (error) throw error;
+
+      relationOptions.value[field.key] = (data ?? []).map((row: Record<string, any>) => ({
+        label: String(row[labelCol] ?? row.id),
+        value: String(row.id),
+      }));
+    } catch {
+      relationOptions.value[field.key] = [];
+    } finally {
+      relationLoading.value[field.key] = false;
+    }
+  }
 };
 
 const load = async () => {
@@ -337,6 +432,9 @@ const load = async () => {
   }
   try {
     if (isFormView.value) {
+      // Selalu load relation options saat form view
+      await loadRelationOptions();
+
       if (isCreate.value) {
         resetForm();
       } else {
@@ -345,9 +443,17 @@ const load = async () => {
         form.value = { ...data };
         for (const field of resource.value.fields) {
           if (field.type === 'list' && Array.isArray(form.value[field.key])) form.value[field.key] = form.value[field.key].join('\n');
+          // Konversi relation value ke string untuk kompatibilitas dengan v-model select
+          if (field.type === 'relation' && form.value[field.key] != null) {
+            form.value[field.key] = String(form.value[field.key]);
+          }
         }
       }
     } else {
+      // List view: load relation options untuk tampil di tabel jika ada kolom relation
+      const hasRelationInVisible = visibleFields.value.some(f => f.type === 'relation');
+      if (hasRelationInVisible) await loadRelationOptions();
+
       const { data, error } = await $supabase.from(resource.value.table).select('*').order('created_at', { ascending: false });
       if (error) throw error;
       rows.value = data ?? [];
@@ -364,6 +470,16 @@ const save = async () => {
   saving.value = true;
   errorMessage.value = '';
   try {
+    // Pastikan slug sudah terisi (auto-generate jika belum)
+    for (const field of resource.value.fields) {
+      if (field.autoFrom && (!form.value[field.key] || form.value[field.key] === '')) {
+        const sourceValue = form.value[field.autoFrom];
+        if (typeof sourceValue === 'string' && sourceValue.trim()) {
+          form.value[field.key] = toSlug(sourceValue);
+        }
+      }
+    }
+
     const missingField = resource.value.fields.find(field => field.required && !form.value[field.key]);
     if (missingField) throw new Error(`${missingField.label} wajib diisi.`);
 
@@ -372,7 +488,6 @@ const save = async () => {
       let value = form.value[field.key];
       if (field.type === 'list') value = String(value ?? '').split('\n').map((item: string) => item.trim()).filter(Boolean);
       if (field.type === 'number') {
-        // Handle number/decimal fields - convert to proper number or null
         if (value === '' || value === undefined || value === null) {
           value = null;
         } else {
@@ -381,11 +496,11 @@ const save = async () => {
         }
       }
       if (field.type === 'boolean') value = value === true || value === 'true';
+      // Relation: simpan sebagai string UUID (atau null jika kosong)
+      if (field.type === 'relation') value = value === '' ? null : value;
       payload[field.key] = value;
     }
-    if (payload.slug === '' && typeof payload.name === 'string') {
-      payload.slug = payload.name.trim().toLocaleLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    }
+
     if (isCreate.value) {
       const { error } = await $supabase.from(resource.value.table).insert(payload);
       if (error) throw error;
@@ -463,6 +578,22 @@ const removeRow = async (row: Record<string, any>) => {
     toast.success(`${resource.value.label} berhasil dihapus`);
   }
 };
+
+// Auto-generate slug secara real-time saat field sumber (autoFrom) berubah
+watch(
+  () => form.value,
+  (newForm) => {
+    if (!resource.value || !isFormView.value) return;
+    for (const field of resource.value.fields) {
+      if (!field.autoFrom) continue;
+      const sourceValue = newForm[field.autoFrom];
+      if (typeof sourceValue === 'string') {
+        form.value[field.key] = toSlug(sourceValue);
+      }
+    }
+  },
+  { deep: true }
+);
 
 watch(() => [props.resourceKey, recordId.value], () => {
   currentPage.value = 1;
