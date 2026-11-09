@@ -29,3 +29,4 @@
 <script setup lang="ts">
 const { totalItemsCount, openCart } = useOrderCart();
 </script>
+

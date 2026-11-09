@@ -18,3 +18,4 @@ export interface OrderCustomerInfo {
   paymentPreference: 'Transfer Bank' | 'COD Toko' | 'Tempo B2B / DP' | 'Belum Tahu';
   notes?: string;
 }
+
