@@ -1,20 +1,31 @@
 <template>
-  <OrganismsResponsiveGridContainer
-    :is-empty="products.length === 0"
-    empty-message="Tidak ada produk di kategori ini"
-    :columns="gridColumnSettings"
-    :gap="{ mobile: 'gap-3', tablet: 'gap-4', desktop: 'gap-6' }"
-  >
-    <!-- Products Grid Items -->
-    <MoleculesProductCard
-      v-for="product in products"
-      :key="product.id"
-      :product="product"
+  <div>
+    <OrganismsResponsiveGridContainer
+      :is-empty="products.length === 0"
+      empty-message="Tidak ada produk di kategori ini"
+      :columns="gridColumnSettings"
+      :gap="{ mobile: 'gap-3', tablet: 'gap-4', desktop: 'gap-6' }"
+    >
+      <!-- Products Grid Items -->
+      <MoleculesProductCard
+        v-for="product in products"
+        :key="product.id"
+        :product="product"
+        @view-details="handleOpenQuickView"
+      />
+    </OrganismsResponsiveGridContainer>
+
+    <!-- Quick View Modal for Full Details -->
+    <MoleculesProductQuickViewModal
+      :is-open="isQuickViewOpen"
+      :product="selectedProduct"
+      @close="isQuickViewOpen = false"
     />
-  </OrganismsResponsiveGridContainer>
+  </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import type { Product } from '~/types/product'
 
 interface Props {
@@ -25,6 +36,14 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+const selectedProduct = ref<Product | null>(null)
+const isQuickViewOpen = ref(false)
+
+const handleOpenQuickView = (product: Product) => {
+  selectedProduct.value = product
+  isQuickViewOpen.value = true
+}
 
 const gridColumnSettings = computed(() => {
   const cols = props.gridColumns || 6

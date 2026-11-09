@@ -53,6 +53,7 @@
           v-for="product in filteredProducts"
           :key="product.id"
           :product="product"
+          @view-details="handleOpenQuickView"
         />
       </div>
 
@@ -60,11 +61,19 @@
       <div class="text-center mt-12 text-sm text-slate-500">
         Menampilkan {{ filteredProducts.length }} dari {{ allProducts.length }} produk
       </div>
+
+      <!-- Quick View Modal for Full Details -->
+      <MoleculesProductQuickViewModal
+        :is-open="isQuickViewOpen"
+        :product="selectedProduct"
+        @close="isQuickViewOpen = false"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import type { Product } from '~/types/product'
 
 interface Props {
@@ -78,6 +87,14 @@ const props = withDefaults(defineProps<Props>(), {
   title: 'Produk Unggulan',
   subtitle: 'Pilihan terbaik dari koleksi kami'
 })
+
+const selectedProduct = ref<Product | null>(null)
+const isQuickViewOpen = ref(false)
+
+const handleOpenQuickView = (product: Product) => {
+  selectedProduct.value = product
+  isQuickViewOpen.value = true
+}
 
 const searchQuery = ref('')
 const sortBy = ref('newest')
