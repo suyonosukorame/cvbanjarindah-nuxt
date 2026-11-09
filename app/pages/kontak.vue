@@ -179,8 +179,9 @@
               </a>
             </div>
           </div>
-      </div>
-    </div>
+        </div><!-- end Business Hours & Socials -->
+      </div><!-- end Contact Information column -->
+    </div><!-- end grid -->
   </div>
 </template>
 

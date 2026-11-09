@@ -69,6 +69,53 @@ export default defineNuxtConfig({
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap' },
         { rel: 'stylesheet', href: 'https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined' },
       ],
+      // SEO: LocalBusiness structured data (JSON-LD) for Google Search
+      script: [
+        {
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'LocalBusiness',
+            name: 'CV. Banjar Indah',
+            description: 'Suplier & Mitra Usaha Terpercaya di Kalimantan Selatan & Tengah. Distributor resmi produk Kesehatan, Kosmetik, Baby, Garment, Elektronik, dan Kelontongan.',
+            url: 'https://cvbanjarindah.pages.dev',
+            telephone: '+6285124502615',
+            priceRange: 'Grosir',
+            image: 'https://cvbanjarindah.pages.dev/logo-cv-banjarindah.png',
+            address: {
+              '@type': 'PostalAddress',
+              streetAddress: 'Jl. Mahoni No. 98 RT.12 Komplek Banjar Indah Permai, Pemurus Dalam',
+              addressLocality: 'Banjarmasin Selatan',
+              addressRegion: 'Kalimantan Selatan',
+              postalCode: '70248',
+              addressCountry: 'ID',
+            },
+            geo: {
+              '@type': 'GeoCoordinates',
+              latitude: -3.3497972,
+              longitude: 114.6164557,
+            },
+            openingHoursSpecification: [
+              {
+                '@type': 'OpeningHoursSpecification',
+                dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                opens: '08:30',
+                closes: '17:00',
+              },
+            ],
+            sameAs: [
+              'https://www.instagram.com/cvbanjarindah/',
+              'https://www.tiktok.com/@cvbanjarindah',
+            ],
+            contactPoint: {
+              '@type': 'ContactPoint',
+              telephone: '+6285124502615',
+              contactType: 'sales',
+              availableLanguage: 'Indonesian',
+            },
+          }),
+        },
+      ],
     },
   },
 
