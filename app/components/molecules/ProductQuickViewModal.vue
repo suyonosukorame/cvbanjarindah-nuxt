@@ -147,29 +147,50 @@
                     </div>
                   </div>
 
+                  <!-- Quantity & Add to Cart Section -->
+                  <div class="pt-2 p-3 bg-orange-50/60 rounded-xl border border-orange-100 space-y-3">
+                    <div class="flex items-center justify-between text-xs">
+                      <span class="font-bold text-slate-800">Jumlah Permintaan:</span>
+                      <AtomsQuantityControl
+                        v-model="orderQuantity"
+                        v-model:unit="orderUnit"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs cursor-pointer"
+                      :class="[
+                        isAdded
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-primary hover:bg-orange-600 text-white'
+                      ]"
+                      @click="handleAddToCart"
+                    >
+                      <span class="material-symbols-outlined text-lg">{{ isAdded ? 'check_circle' : 'add_shopping_cart' }}</span>
+                      <span>{{ isAdded ? 'Berhasil Ditambahkan!' : '+ Tambah ke Daftar Pesanan' }}</span>
+                    </button>
+                  </div>
+
                   <!-- Action CTA Buttons -->
-                  <div class="pt-3 space-y-2.5">
+                  <div class="pt-1 space-y-2">
                     <a
                       :href="whatsappUrl"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="w-full flex items-center justify-center gap-2 py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold transition shadow-sm"
+                      class="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-bold transition shadow-xs"
                     >
-                      <span class="material-symbols-outlined text-lg"
-                        >chat</span
-                      >
-                      <span>Tanya Harga via WhatsApp</span>
+                      <span class="material-symbols-outlined text-base">chat</span>
+                      <span>Tanya Harga Langsung (1 Produk)</span>
                     </a>
 
                     <NuxtLink
                       to="/kontak"
-                      class="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition"
+                      class="w-full flex items-center justify-center gap-1.5 py-2 px-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition"
                       @click="handleClose"
                     >
-                      <span class="material-symbols-outlined text-base"
-                        >mail</span
-                      >
-                      <span>Kirim Formulir Penawaran</span>
+                      <span class="material-symbols-outlined text-base">mail</span>
+                      <span>Formulir Kemitraan Toko</span>
                     </NuxtLink>
                   </div>
                 </div>
@@ -183,8 +204,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import type { Product } from "~/types/product";
+import type { OrderUnit } from "~/types/cart";
 
 interface Props {
   isOpen: boolean;
@@ -195,6 +217,21 @@ const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "close"): void;
 }>();
+
+const { addToCart } = useOrderCart();
+
+const orderQuantity = ref(1);
+const orderUnit = ref<OrderUnit>("Karton");
+const isAdded = ref(false);
+
+const handleAddToCart = () => {
+  if (!props.product) return;
+  addToCart(props.product, orderQuantity.value, orderUnit.value);
+  isAdded.value = true;
+  setTimeout(() => {
+    isAdded.value = false;
+  }, 1800);
+};
 
 const handleClose = () => {
   emit("close");

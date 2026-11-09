@@ -66,9 +66,24 @@
         <span>Kontak</span>
       </NuxtLink>
     </div>
+
+    <!-- Floating Mobile Order Cart Trigger -->
+    <div
+      v-if="totalItemsCount > 0"
+      class="fixed bottom-20 right-4 z-40 md:hidden animate-in fade-in slide-in-from-bottom-4 duration-200"
+    >
+      <button
+        type="button"
+        class="flex items-center gap-1.5 px-4 py-2.5 bg-primary hover:bg-orange-600 text-white font-bold text-xs rounded-full shadow-xl border-2 border-white transition-transform active:scale-95 cursor-pointer"
+        @click="openCart"
+      >
+        <span class="material-symbols-outlined text-base">shopping_cart</span>
+        <span>Order ({{ totalItemsCount }})</span>
+      </button>
+    </div>
   </nav>
 </template>
 
 <script setup lang="ts">
-// BottomNav logic
+const { totalItemsCount, openCart } = useOrderCart();
 </script>

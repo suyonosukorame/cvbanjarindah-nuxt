@@ -40,18 +40,21 @@
         >
           Tentang
         </NuxtLink>
+
+        <!-- Order Cart Button (Desktop) -->
+        <MoleculesOrderCartButton />
         
         <NuxtLink 
           to="/kontak" 
-          class="px-6 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-opacity-90 transition"
+          class="px-5 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-opacity-90 transition text-sm"
         >
           Kontak
         </NuxtLink>
       </div>
 
-      <!-- Mobile: No dark mode toggle needed -->
-      <div class="md:hidden">
-        <!-- Placeholder for future mobile actions if needed -->
+      <!-- Mobile Actions -->
+      <div class="md:hidden flex items-center gap-2">
+        <MoleculesOrderCartButton />
       </div>
     </div>
   </nav>

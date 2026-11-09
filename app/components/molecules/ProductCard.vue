@@ -48,19 +48,37 @@
       
       <!-- Bottom Actions Pinned to Base -->
       <div class="mt-auto pt-2 space-y-1.5">
-        <a
-          :href="whatsappUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-primary hover:bg-orange-600 text-white rounded-lg text-xs sm:text-sm font-bold transition-colors shadow-xs"
-        >
-          <span class="material-symbols-outlined text-base">chat</span>
-          <span>Tanya Harga</span>
-        </a>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button
+            type="button"
+            class="flex items-center justify-center gap-1 py-2 px-2 rounded-lg text-xs font-bold transition-all border cursor-pointer"
+            :class="[
+              isAdded
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                : 'bg-orange-50 hover:bg-orange-100 text-primary border-orange-200'
+            ]"
+            title="Tambah ke Daftar Pesanan Grosir"
+            @click="handleAddToCart"
+          >
+            <span class="material-symbols-outlined text-base">{{ isAdded ? 'check' : 'add_shopping_cart' }}</span>
+            <span>{{ isAdded ? 'Ditambah' : '+ Order' }}</span>
+          </button>
+
+          <a
+            :href="whatsappUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center gap-1 py-2 px-2 bg-primary hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition-colors shadow-2xs"
+            title="Tanya harga langsung ke WhatsApp"
+          >
+            <span class="material-symbols-outlined text-base">chat</span>
+            <span>Tanya WA</span>
+          </a>
+        </div>
 
         <button
           type="button"
-          class="w-full py-1 text-center text-xs font-semibold text-slate-500 hover:text-primary transition-colors"
+          class="w-full py-1 text-center text-xs font-semibold text-slate-500 hover:text-primary transition-colors cursor-pointer"
           @click="$emit('view-details', product)"
         >
           Lihat Deskripsi Lengkap
@@ -71,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import type { Product } from '~/types/product';
 
 interface Props {
@@ -83,6 +101,17 @@ const props = defineProps<Props>();
 defineEmits<{
   (e: 'view-details', product: Product): void;
 }>();
+
+const { addToCart } = useOrderCart();
+const isAdded = ref(false);
+
+const handleAddToCart = () => {
+  addToCart(props.product, 1, 'Karton');
+  isAdded.value = true;
+  setTimeout(() => {
+    isAdded.value = false;
+  }, 1500);
+};
 
 const categoryColor = computed(() => {
   const colors: Record<string, any> = {

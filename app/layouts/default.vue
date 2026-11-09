@@ -9,6 +9,7 @@
     <Footer />
     <BottomNav />
     <AIAssistant />
+    <OrganismsOrderCartDrawer />
   </div>
 </template>
 
