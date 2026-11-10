@@ -2,20 +2,20 @@
   <div class="max-w-7xl mx-auto px-4 py-16">
     <h1 class="text-4xl font-black mb-4 text-slate-900">Area Distribusi</h1>
     <p class="text-slate-600 mb-12">
-      Jangkauan distribusi kami meliputi seluruh Kalimantan
+      Melayani distribusi di wilayah <strong>Kalimantan Selatan</strong> dan <strong>Kalimantan Tengah</strong> — pengiriman armada sendiri maupun via ekspedisi
     </p>
 
     <!-- Map section with image -->
     <div class="relative rounded-2xl overflow-hidden h-96 mb-12 shadow-2xl">
       <img 
         src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=1200&h=600&fit=crop" 
-        alt="Kalimantan Map"
+        alt="Peta Kalimantan Selatan dan Tengah"
         class="w-full h-full object-cover"
       />
       <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent flex items-end">
         <div class="p-8 text-white">
-          <h3 class="text-2xl font-black mb-2">Melayani Seluruh Kalimantan</h3>
-          <p class="text-slate-200">Distribusi cepat dan terpercaya ke setiap wilayah</p>
+          <h3 class="text-2xl font-black mb-2">Kalsel & Kalteng — Jangkauan Utama Kami</h3>
+          <p class="text-slate-200">Distribusi cepat dan terpercaya ke kota & kabupaten di wilayah kami</p>
         </div>
       </div>
     </div>
@@ -27,23 +27,17 @@
         <ul class="space-y-4">
           <li class="flex items-center gap-3">
             <span class="material-symbols-outlined text-primary">check_circle</span>
-            <span class="text-slate-900">Kalimantan Selatan</span>
+            <div>
+              <span class="font-semibold text-slate-900">Kalimantan Selatan</span>
+              <p class="text-xs text-slate-500">Banjarmasin, Banjarbaru, Martapura, Kandangan, Barabai, Amuntai, Tanjung, Kotabaru, Pelaihari, Marabahan</p>
+            </div>
           </li>
           <li class="flex items-center gap-3">
             <span class="material-symbols-outlined text-primary">check_circle</span>
-            <span class="text-slate-900">Kalimantan Tengah</span>
-          </li>
-          <li class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">check_circle</span>
-            <span class="text-slate-900">Kalimantan Barat</span>
-          </li>
-          <li class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">check_circle</span>
-            <span class="text-slate-900">Kalimantan Timur</span>
-          </li>
-          <li class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-primary">check_circle</span>
-            <span class="text-slate-900">Kalimantan Utara</span>
+            <div>
+              <span class="font-semibold text-slate-900">Kalimantan Tengah</span>
+              <p class="text-xs text-slate-500">Palangka Raya, Sampit, Pangkalan Bun, Muara Teweh, Kuala Kapuas, Pulang Pisau</p>
+            </div>
           </li>
         </ul>
       </div>
@@ -54,22 +48,29 @@
           <li class="flex items-start gap-3">
             <span class="material-symbols-outlined text-primary mt-1">local_shipping</span>
             <div>
-              <h4 class="font-bold text-slate-900">Pengiriman Tepat Waktu</h4>
-              <p class="text-sm text-slate-600">Kami menjamin pengiriman sesuai jadwal</p>
+              <h4 class="font-bold text-slate-900">Armada Truk Sendiri (Kalsel)</h4>
+              <p class="text-sm text-slate-600">Pengiriman langsung ke toko di Banjarmasin, Banjarbaru, Martapura, dan sekitarnya</p>
+            </div>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-primary mt-1">conveyor_belt</span>
+            <div>
+              <h4 class="font-bold text-slate-900">Ekspedisi & Pengapalan (Kalteng)</h4>
+              <p class="text-sm text-slate-600">Bantu drop ke ekspedisi langganan / pelabuhan untuk pengiriman ke Palangka Raya, Sampit, Pangkalan Bun, dan daerah Kalteng lainnya</p>
             </div>
           </li>
           <li class="flex items-start gap-3">
             <span class="material-symbols-outlined text-primary mt-1">verified</span>
             <div>
-              <h4 class="font-bold text-slate-900">Produk Aman</h4>
-              <p class="text-sm text-slate-600">Packaging aman dan profesional</p>
+              <h4 class="font-bold text-slate-900">Produk Dijamin Aman</h4>
+              <p class="text-sm text-slate-600">Retur produk rusak saat diterima — tanggung jawab kami</p>
             </div>
           </li>
           <li class="flex items-start gap-3">
             <span class="material-symbols-outlined text-primary mt-1">support_agent</span>
             <div>
-              <h4 class="font-bold text-slate-900">Dukungan Penuh</h4>
-              <p class="text-sm text-slate-600">Tim siap membantu di setiap kota</p>
+              <h4 class="font-bold text-slate-900">CS & Sales Responsif</h4>
+              <p class="text-sm text-slate-600">Tim siap follow-up pesanan dan koordinasi pengiriman via WhatsApp</p>
             </div>
           </li>
         </ul>
@@ -80,15 +81,16 @@
     <div class="bg-gradient-to-br from-primary to-orange-600 rounded-2xl p-8 md:p-12 text-white shadow-2xl">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
         <div>
-          <h3 class="text-3xl font-black mb-4">Armada Pengiriman Modern</h3>
+          <h3 class="text-3xl font-black mb-4">Armada Pengiriman & Mitra Ekspedisi</h3>
           <p class="text-white/90 mb-6">
-            Dilengkapi dengan armada pengiriman yang terawat dan sistem tracking untuk memastikan produk Anda sampai dengan aman dan tepat waktu.
+            Kalsel: pengiriman armada truk sendiri, langsung ke toko Anda.<br>
+            Kalteng: bantu drop ke ekspedisi atau pelabuhan sesuai tujuan — pengiriman tetap aman, tepat waktu, dan terlacak.
           </p>
           <NuxtLink 
             to="/kontak"
             class="inline-block px-6 py-3 bg-white text-primary font-bold rounded-lg hover:scale-105 transition"
           >
-            Hubungi Kami
+            Tanya Jadwal Pengiriman
           </NuxtLink>
         </div>
         <div class="relative h-64 rounded-xl overflow-hidden">

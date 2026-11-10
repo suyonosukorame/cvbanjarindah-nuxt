@@ -172,7 +172,7 @@ const handleSend = async () => {
     response = 'Kami menawarkan **3 paket kemitraan**:\n\n🏪 **Starter** - Minimal order 50 unit\n🏬 **Business** - Minimal order 100 unit (Popular!)\n🏢 **Enterprise** - Minimal order 500 unit\n\nUntuk penawaran harga khusus sesuai kebutuhan Anda, mari lanjut chat via WhatsApp! 💰';
     showWhatsAppHandoff.value = true;
   } else if (lowerMsg.includes('area') || lowerMsg.includes('distribusi') || lowerMsg.includes('kirim')) {
-    response = 'Kami melayani distribusi ke **seluruh Kalimantan**:\n\n📍 Kalimantan Selatan\n📍 Kalimantan Tengah\n📍 Kalimantan Timur\n📍 Kalimantan Barat\n📍 Kalimantan Utara\n\nPengiriman cepat & aman! Untuk detail lebih lanjut tentang pengiriman ke area Anda, hubungi kami via WhatsApp.';
+    response = 'Kami melayani distribusi di wilayah **Kalimantan Selatan** dan **Kalimantan Tengah**:\n\n📍 **Kalimantan Selatan** — Banjarmasin, Banjarbaru, Martapura, Kandangan, Barabai, Amuntai, Tanjung, Kotabaru, Pelaihari, Marabahan\n\n📍 **Kalimantan Tengah** — Palangka Raya, Sampit, Pangkalan Bun, Muara Teweh, Kuala Kapuas\n\n🚚 Kalsel: Armada truk sendiri langsung ke toko Anda\n📦 Kalteng: Bantu drop ke ekspedisi / pelabuhan\n\nUntuk informasi pengiriman ke kota Anda, hubungi kami via WhatsApp!';
     showWhatsAppHandoff.value = true;
   } else {
     response = 'Terima kasih atas pertanyaan Anda! 🙏\n\nUntuk informasi lebih detail dan respon yang lebih cepat, silakan hubungi tim sales kami via WhatsApp. Kami siap membantu Anda!';

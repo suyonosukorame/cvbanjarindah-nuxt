@@ -115,7 +115,7 @@
       <div class="max-w-7xl mx-auto px-4">
         <SectionsSectionHeading
           title="Jangkauan Distribusi"
-          subtitle="Melayani seluruh wilayah Kalimantan dengan jaringan distribusi yang luas"
+          subtitle="Melayani wilayah Kalimantan Selatan & Kalimantan Tengah dengan pengiriman armada sendiri maupun ekspedisi"
           align="center"
         />
 

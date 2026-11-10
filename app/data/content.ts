@@ -85,7 +85,7 @@ export const whyChooseUs = [
     id: '2',
     icon: '🚚',
     title: 'Distribusi Luas',
-    description: 'Jangkauan ke seluruh wilayah Kalimantan',
+    description: 'Jangkauan distribusi Kalimantan Selatan & Kalimantan Tengah',
   },
   {
     id: '3',
@@ -213,36 +213,36 @@ export const pricingPackages = [
   },
 ];
 
-// Coverage Areas
+// Coverage Areas (Lingkup: Kalimantan Selatan & Kalimantan Tengah)
 export const coverageAreas = [
   {
     id: '1',
     name: 'Kalimantan Selatan',
-    cities: ['Banjarmasin', 'Banjarbaru', 'Martapura', 'Kandangan'],
+    cities: [
+      'Banjarmasin (Pusat)',
+      'Banjarbaru',
+      'Martapura (Kab. Banjar)',
+      'Kandangan (Hulu Sungai Selatan)',
+      'Barabai (Hulu Sungai Tengah)',
+      'Amuntai (Hulu Sungai Utara)',
+      'Kotabaru',
+      'Tanjung (Tabalong)',
+      'Pelaihari (Tanah Laut)',
+      'Marabahan (Barito Kuala)',
+    ],
     color: 'blue',
   },
   {
     id: '2',
     name: 'Kalimantan Tengah',
-    cities: ['Palangkaraya', 'Sampit', 'Pangkalan Bun'],
+    cities: [
+      'Palangka Raya (Pusat Kalteng)',
+      'Sampit (Kotawaringin Timur)',
+      'Pangkalan Bun (Kotawaringin Barat)',
+      'Muara Teweh (Barito Utara)',
+      'Kuala Kapuas',
+      'Pulang Pisau',
+    ],
     color: 'green',
-  },
-  {
-    id: '3',
-    name: 'Kalimantan Timur',
-    cities: ['Balikpapan', 'Samarinda', 'Bontang', 'Tenggarong'],
-    color: 'red',
-  },
-  {
-    id: '4',
-    name: 'Kalimantan Barat',
-    cities: ['Pontianak', 'Singkawang', 'Mempawah'],
-    color: 'yellow',
-  },
-  {
-    id: '5',
-    name: 'Kalimantan Utara',
-    cities: ['Tarakan', 'Tanjung Selor', 'Malinau'],
-    color: 'purple',
   },
 ];
