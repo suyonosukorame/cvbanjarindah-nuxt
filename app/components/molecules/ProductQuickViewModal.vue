@@ -97,25 +97,44 @@
                   <div
                     v-if="product.tiktok_post_id"
                     v-show="mediaTab === 'tiktok'"
-                    class="relative bg-slate-900 rounded-xl overflow-hidden border border-slate-800"
-                    style="padding-bottom: 177.78%;"
+                    class="space-y-2"
                   >
                     <div
-                      v-if="!tiktokLoaded && mediaTab === 'tiktok'"
-                      class="absolute inset-0 flex flex-col items-center justify-center text-white/60 text-xs gap-2"
+                      class="relative bg-slate-950 rounded-xl overflow-hidden border border-slate-800"
+                      style="padding-bottom: 177.78%;"
                     >
-                      <div class="w-6 h-6 border-2 border-white/20 border-t-white/70 rounded-full animate-spin" />
-                      <span>Memuat TikTok...</span>
+                      <div
+                        v-if="!tiktokLoaded && mediaTab === 'tiktok'"
+                        class="absolute inset-0 flex flex-col items-center justify-center text-white/60 text-xs gap-2"
+                      >
+                        <div class="w-6 h-6 border-2 border-white/20 border-t-[#fe2c55] rounded-full animate-spin" />
+                        <span>Memuat TikTok...</span>
+                      </div>
+                      <iframe
+                        v-if="mediaTab === 'tiktok' && cleanTikTokId"
+                        :src="`https://www.tiktok.com/player/v1/${cleanTikTokId}?music_info=1&description=1&rel=0&autoplay=0`"
+                        class="absolute inset-0 w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen
+                        scrolling="no"
+                        @load="tiktokLoaded = true"
+                      />
                     </div>
-                    <iframe
-                      v-if="mediaTab === 'tiktok'"
-                      :src="`https://www.tiktok.com/player/v1/${product.tiktok_post_id}?rel=1&autoplay=0`"
-                      class="absolute inset-0 w-full h-full border-0"
-                      allowfullscreen
-                      allow="encrypted-media *; autoplay"
-                      scrolling="no"
-                      @load="tiktokLoaded = true"
-                    />
+
+                    <!-- Direct Open Button in Quick View -->
+                    <a
+                      :href="directTikTokUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="w-full flex items-center justify-center gap-2 py-2 px-3 bg-gradient-to-r from-[#fe2c55] to-[#25f4ee] hover:opacity-95 text-white font-bold rounded-xl text-xs transition shadow-sm cursor-pointer"
+                    >
+                      <svg class="w-3.5 h-3.5 fill-white shrink-0" viewBox="0 0 24 24">
+                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.69a8.19 8.19 0 004.78 1.52V6.76a4.85 4.85 0 01-1.02-.07z"/>
+                      </svg>
+                      <span>Putar Langsung di TikTok</span>
+                      <span class="material-symbols-outlined text-xs">open_in_new</span>
+                    </a>
                   </div>
                 </div>
 
@@ -283,6 +302,18 @@ const tiktokLoaded = ref(false);
 watch(() => props.product, () => {
   mediaTab.value = 'photo';
   tiktokLoaded.value = false;
+});
+
+const cleanTikTokId = computed(() => {
+  if (!props.product?.tiktok_post_id) return '';
+  const match = props.product.tiktok_post_id.match(/\d{15,25}/);
+  return match ? match[0] : props.product.tiktok_post_id.trim();
+});
+
+const directTikTokUrl = computed(() => {
+  if (!props.product?.tiktok_post_id) return 'https://www.tiktok.com/@cvbanjarindah';
+  if (props.product.tiktok_post_id.startsWith('http')) return props.product.tiktok_post_id;
+  return `https://www.tiktok.com/@cvbanjarindah/photo/${cleanTikTokId.value}`;
 });
 
 const handleAddToCart = () => {
