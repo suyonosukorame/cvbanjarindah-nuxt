@@ -167,3 +167,4 @@ watch(() => [props.isOpen, props.mediaInput], ([open]) => {
   if (!open) loaded.value = false;
 });
 </script>
+
