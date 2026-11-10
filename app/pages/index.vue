@@ -150,7 +150,6 @@ import {
   features,
   whyChooseUs,
   companyStats as staticCompanyStats,
-  clientBrands,
   testimonials as staticTestimonials,
   pricingPackages as staticPricingPackages,
   coverageAreas,
@@ -172,6 +171,7 @@ const categoriesList = ref<string[]>([
   "Elektronik",
   "Kelontongan",
 ]);
+const clientBrands = ref<Array<{ id: string; name: string; logo: string }>>([]);
 const companyStats = ref(staticCompanyStats);
 const testimonials = ref(staticTestimonials);
 const pricingPackages = ref(staticPricingPackages);
@@ -197,8 +197,9 @@ onMounted(async () => {
         .order("sort_order", { ascending: true }),
       supabase
         .from("brands")
-        .select("id, name")
-        .eq("is_active", true),
+        .select("id, name, logo_url")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
     ]);
 
     const catMap = new Map((categoriesResult.data || []).map((c: any) => [c.id, c.name]));
@@ -206,6 +207,18 @@ onMounted(async () => {
 
     if (categoriesResult.data && categoriesResult.data.length > 0) {
       categoriesList.value = ["Semua", ...categoriesResult.data.map((c: any) => c.name)];
+    }
+
+    if (brandsResult.error) {
+      console.error("Error fetching homepage brands:", brandsResult.error);
+    } else {
+      clientBrands.value = (brandsResult.data ?? [])
+        .filter((brand: any) => brand.logo_url?.trim())
+        .map((brand: any) => ({
+          id: String(brand.id),
+          name: brand.name,
+          logo: brand.logo_url,
+        }));
     }
 
     if (productsResult.data && productsResult.data.length > 0) {
