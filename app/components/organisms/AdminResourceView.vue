@@ -404,7 +404,6 @@
       @confirm="executeDelete"
       @cancel="showDeleteDialog = false"
     />
-    </template>
   </section>
 </template>
 
