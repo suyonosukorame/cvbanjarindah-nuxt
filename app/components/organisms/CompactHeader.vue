@@ -13,16 +13,18 @@
       <!-- Title Section (Collapsible) -->
       <div
         :class="[
-          'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 px-4 py-4 transition-all duration-300 overflow-hidden',
+          'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 transition-all duration-300 overflow-hidden',
           { 'max-h-0 py-0': isTitleCollapsed }
         ]"
       >
-        <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ title }}</h1>
-        <p class="text-sm text-gray-600 dark:text-gray-400">{{ subtitle }}</p>
+        <div class="max-w-7xl mx-auto px-3 sm:px-4 py-4">
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-1">{{ title }}</h1>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ subtitle }}</p>
+        </div>
       </div>
 
       <!-- Controls Section (Search, Sort, Filter) -->
-      <div class="px-4 py-4 space-y-3">
+      <div class="max-w-7xl mx-auto px-3 sm:px-4 py-4 space-y-3">
         <!-- Search Bar -->
         <MoleculesSearchBar
           :model-value="searchQuery"

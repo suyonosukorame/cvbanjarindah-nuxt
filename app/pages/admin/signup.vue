@@ -2,10 +2,19 @@
   <main class="grid min-h-screen bg-slate-50 lg:grid-cols-[1fr_1fr]">
     <!-- Branding Side (Desktop) -->
     <section class="hidden flex-col justify-between bg-slate-900 p-12 text-white lg:flex">
-      <NuxtLink to="/" class="flex items-center gap-3 font-bold text-lg hover:opacity-90 transition-opacity">
-        <span class="material-symbols-outlined text-3xl text-orange-400">storefront</span>
-        CV Banjar Indah
-      </NuxtLink>
+      <div class="flex items-center justify-between">
+        <NuxtLink to="/" class="flex items-center gap-3 font-bold text-lg hover:opacity-90 transition-opacity">
+          <span class="material-symbols-outlined text-3xl text-orange-400">storefront</span>
+          CV Banjar Indah
+        </NuxtLink>
+        <NuxtLink 
+          to="/" 
+          class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300 hover:text-white transition-colors bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-lg border border-white/10"
+        >
+          <span class="material-symbols-outlined text-sm">arrow_back</span>
+          <span>Website Utama</span>
+        </NuxtLink>
+      </div>
       <div class="max-w-lg">
         <p class="mb-3 text-sm font-semibold uppercase tracking-wider text-orange-300">Pendaftaran Staf</p>
         <h1 class="text-4xl font-bold leading-tight">Buat akun untuk mengakses portal administrasi.</h1>
@@ -16,10 +25,17 @@
     <!-- Signup Form Side -->
     <section class="flex items-center justify-center p-5 sm:p-10">
       <div class="w-full max-w-md space-y-6">
-        <NuxtLink to="/" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 lg:hidden">
-          <span class="material-symbols-outlined text-primary">storefront</span>
-          CV Banjar Indah
-        </NuxtLink>
+        <!-- Top Back Link -->
+        <div class="flex items-center justify-between pb-1">
+          <NuxtLink 
+            to="/" 
+            class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-slate-500 hover:text-primary transition-colors group"
+          >
+            <span class="material-symbols-outlined text-base group-hover:-translate-x-1 transition-transform">arrow_back</span>
+            <span>Kembali ke Website Utama</span>
+          </NuxtLink>
+          <span class="text-xs text-slate-400 hidden sm:inline">CV Banjar Indah</span>
+        </div>
 
         <div>
           <p class="text-sm font-semibold text-primary">Registrasi Pengguna</p>
@@ -139,12 +155,20 @@
           </button>
         </form>
 
-        <p class="text-center text-sm text-slate-600 pt-2 border-t border-slate-100">
-          Sudah punya akun admin?
-          <NuxtLink to="/admin/login" class="font-bold text-primary hover:text-orange-700 ml-1">
-            Masuk di sini
-          </NuxtLink>
-        </p>
+        <div class="pt-2 border-t border-slate-100 space-y-2 text-center text-sm text-slate-600">
+          <p>
+            Sudah punya akun admin?
+            <NuxtLink to="/admin/login" class="font-bold text-primary hover:text-orange-700 ml-1">
+              Masuk di sini
+            </NuxtLink>
+          </p>
+          <p class="text-xs text-slate-400">
+            Bukan staf CV Banjar Indah? 
+            <NuxtLink to="/" class="text-primary hover:underline font-semibold ml-0.5">
+              Kembali ke Beranda
+            </NuxtLink>
+          </p>
+        </div>
       </div>
     </section>
   </main>
