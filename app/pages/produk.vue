@@ -16,7 +16,7 @@
       @update:grid-columns="gridColumns = $event"
     />
 
-    <div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
       <div v-if="loading" class="flex items-center justify-center py-20">
         <div class="text-center">
           <div class="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4" />
