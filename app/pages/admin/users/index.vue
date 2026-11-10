@@ -186,6 +186,7 @@ definePageMeta({
 useHead({ title: 'Manajemen Pengguna | CV Banjar Indah' });
 
 const { $supabase } = useNuxtApp();
+const { user: currentAuthUser } = useAuth();
 
 interface AdminUserRow {
   id: string
@@ -264,10 +265,13 @@ const fetchUsers = async () => {
 
     // Jika data kosong, simpan info untuk debug panel
     if (users.value.length === 0) {
-      fetchError.value = 'Query berhasil tapi data kosong. Kemungkinan:\n' +
-        '1. RLS policy memblokir SELECT (jalankan fix_admin_users_schema.sql)\n' +
-        '2. Belum ada user yang berhasil mendaftar (insert ke admin_users gagal)\n' +
-        '3. Schema kolom status/role belum diperbarui';
+      const email = currentAuthUser.value?.email || 'Tidak terdeteksi';
+      const role = currentAuthUser.value?.role || 'Tidak ada profil';
+      fetchError.value = `Akun saat ini: ${email} | Role: ${role}\n\n` +
+        'Query berhasil tapi mengembalikan 0 baris data. Kemungkinan:\n' +
+        '1. Akun Anda bukan "super_admin" (RLS Supabase membatasi hak akses agar staf biasa tidak dapat mengintip daftar pengguna lain).\n' +
+        '2. Skrip migrasi fix_admin_users_schema.sql belum dijalankan di Supabase SQL Editor.\n' +
+        '3. Akun yang terdaftar di Supabase Auth (auth.users) belum tersinkronkan ke tabel public.admin_users.';
     }
   } catch (error: any) {
     const errMsg = error.message || 'Gagal memuat data pengguna dari Supabase.';
