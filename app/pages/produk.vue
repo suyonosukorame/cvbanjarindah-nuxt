@@ -126,7 +126,7 @@ const loadProducts = async () => {
     let query = supabase
       .from('products')
       .select(
-        'id, name, description, image_url, price, stock, is_featured, created_at, category_id, brand_id',
+        'id, name, description, image_url, price, stock, is_featured, created_at, category_id, brand_id, tiktok_post_id',
         { count: 'exact' },
       )
       .eq('status', 'active')
@@ -205,6 +205,7 @@ const loadProducts = async () => {
       brandId: item.brand_id,
       brand: brandOptions.value.find(brand => brand.id === item.brand_id)?.name,
       createdAt: item.created_at,
+      tiktok_post_id: item.tiktok_post_id || null,
     }))
   } catch (fetchError) {
     if (requestId !== latestRequestId) return

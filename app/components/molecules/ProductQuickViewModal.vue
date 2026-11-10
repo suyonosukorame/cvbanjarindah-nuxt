@@ -45,24 +45,77 @@
                 class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start"
               >
                 <!-- Product Image Container -->
-                <div
-                  class="relative bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center min-h-[260px] sm:min-h-[320px]"
-                >
-                  <img
-                    :src="product.image"
-                    :alt="product.name"
-                    class="w-full h-auto max-h-[360px] object-contain p-4"
-                    loading="lazy"
-                  />
-                  <div class="absolute bottom-3 left-3">
-                    <span
-                      class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-orange-700 bg-orange-100/90 rounded-md backdrop-blur-xs"
+                <div class="space-y-3">
+                  <!-- Tab switcher: Foto | TikTok -->
+                  <div v-if="product.tiktok_post_id" class="flex rounded-xl overflow-hidden border border-slate-200 text-xs font-semibold">
+                    <button
+                      type="button"
+                      class="flex-1 flex items-center justify-center gap-1.5 py-2 transition"
+                      :class="mediaTab === 'photo' ? 'bg-primary text-white' : 'bg-white text-slate-600 hover:bg-slate-50'"
+                      @click="mediaTab = 'photo'"
                     >
-                      <span class="material-symbols-outlined text-sm"
-                        >verified</span
+                      <span class="material-symbols-outlined text-sm" style="font-size:16px">image</span>
+                      Foto Produk
+                    </button>
+                    <button
+                      type="button"
+                      class="flex-1 flex items-center justify-center gap-1.5 py-2 transition"
+                      :class="mediaTab === 'tiktok' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'"
+                      @click="mediaTab = 'tiktok'"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.69a8.19 8.19 0 004.78 1.52V6.76a4.85 4.85 0 01-1.02-.07z"/>
+                      </svg>
+                      TikTok
+                    </button>
+                  </div>
+
+                  <!-- Photo Panel -->
+                  <div
+                    v-show="mediaTab === 'photo'"
+                    class="relative bg-slate-50 rounded-xl overflow-hidden border border-slate-100 flex items-center justify-center min-h-[260px] sm:min-h-[320px]"
+                  >
+                    <img
+                      :src="product.image"
+                      :alt="product.name"
+                      class="w-full h-auto max-h-[360px] object-contain p-4"
+                      loading="lazy"
+                    />
+                    <div class="absolute bottom-3 left-3">
+                      <span
+                        class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-orange-700 bg-orange-100/90 rounded-md backdrop-blur-xs"
                       >
-                      Produk Resmi
-                    </span>
+                        <span class="material-symbols-outlined text-sm"
+                          >verified</span
+                        >
+                        Produk Resmi
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- TikTok Panel (lazy iframe - hanya di-mount saat tab aktif) -->
+                  <div
+                    v-if="product.tiktok_post_id"
+                    v-show="mediaTab === 'tiktok'"
+                    class="relative bg-slate-900 rounded-xl overflow-hidden border border-slate-800"
+                    style="padding-bottom: 177.78%;"
+                  >
+                    <div
+                      v-if="!tiktokLoaded && mediaTab === 'tiktok'"
+                      class="absolute inset-0 flex flex-col items-center justify-center text-white/60 text-xs gap-2"
+                    >
+                      <div class="w-6 h-6 border-2 border-white/20 border-t-white/70 rounded-full animate-spin" />
+                      <span>Memuat TikTok...</span>
+                    </div>
+                    <iframe
+                      v-if="mediaTab === 'tiktok'"
+                      :src="`https://www.tiktok.com/player/v1/${product.tiktok_post_id}?rel=1&autoplay=0`"
+                      class="absolute inset-0 w-full h-full border-0"
+                      allowfullscreen
+                      allow="encrypted-media *; autoplay"
+                      scrolling="no"
+                      @load="tiktokLoaded = true"
+                    />
                   </div>
                 </div>
 
@@ -223,6 +276,14 @@ const { addToCart } = useOrderCart();
 const orderQuantity = ref(1);
 const orderUnit = ref<OrderUnit>("Karton");
 const isAdded = ref(false);
+const mediaTab = ref<'photo' | 'tiktok'>('photo');
+const tiktokLoaded = ref(false);
+
+// Reset tab & tiktokLoaded saat produk berganti
+watch(() => props.product, () => {
+  mediaTab.value = 'photo';
+  tiktokLoaded.value = false;
+});
 
 const handleAddToCart = () => {
   if (!props.product) return;

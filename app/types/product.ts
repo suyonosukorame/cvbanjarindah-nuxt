@@ -10,6 +10,7 @@ export interface Product {
   brandId?: string | null;
   brand?: string;
   createdAt?: string;
+  tiktok_post_id?: string | null;
 }
 
 export interface ProductFilterOption {

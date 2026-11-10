@@ -1,7 +1,7 @@
 export interface AdminField {
   key: string;
   label: string;
-  type?: 'text' | 'url' | 'email' | 'number' | 'textarea' | 'boolean' | 'select' | 'list' | 'image' | 'relation';
+  type?: 'text' | 'url' | 'email' | 'number' | 'textarea' | 'boolean' | 'select' | 'list' | 'image' | 'relation' | 'social-link';
   required?: boolean;
   options?: Array<{ label: string; value: string }>;
   bucket?: string;
@@ -11,6 +11,10 @@ export interface AdminField {
   relationTable?: string;
   /** Untuk type 'relation': kolom yang ditampilkan sebagai label di dropdown */
   relationLabel?: string;
+  /** Untuk type 'social-link': platform identitas (tiktok | instagram | website | generic) */
+  socialPlatform?: 'tiktok' | 'instagram' | 'website' | 'generic';
+  /** Placeholder khusus */
+  placeholder?: string;
 }
 
 export interface AdminResource {
@@ -45,6 +49,8 @@ export const adminResources: Record<string, AdminResource> = {
       { key: 'brand_id', label: 'Brand', type: 'relation', relationTable: 'brands', relationLabel: 'name' },
       { key: 'stock', label: 'Stok', type: 'number' },
       { key: 'is_featured', label: 'Produk unggulan', type: 'boolean' },
+      // Social media
+      { key: 'tiktok_post_id', label: 'TikTok Post ID', type: 'social-link', socialPlatform: 'tiktok', placeholder: 'Contoh: 7591783410276781332' },
     ],
   },
   categories: {
@@ -71,7 +77,9 @@ export const adminResources: Record<string, AdminResource> = {
       { key: 'is_active', label: 'Aktif', type: 'boolean' },
       // Other fields (form/edit view)
       { key: 'slug', label: 'Slug', required: true, autoFrom: 'name' },
-      { key: 'website_url', label: 'Website', type: 'url' },
+      { key: 'website_url', label: 'Website', type: 'url', placeholder: 'https://www.example.com' },
+      { key: 'tiktok_url', label: 'TikTok Brand', type: 'social-link', socialPlatform: 'tiktok', placeholder: 'https://www.tiktok.com/@namabrand atau @namabrand' },
+      { key: 'instagram_url', label: 'Instagram Brand', type: 'social-link', socialPlatform: 'instagram', placeholder: 'https://www.instagram.com/namabrand atau @namabrand' },
       { key: 'description', label: 'Deskripsi', type: 'textarea' },
       { key: 'is_featured', label: 'Brand unggulan', type: 'boolean' },
     ],
