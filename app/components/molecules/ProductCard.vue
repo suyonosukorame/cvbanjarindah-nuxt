@@ -19,18 +19,17 @@
         </span>
       </div>
 
-      <!-- TikTok Badge (pojok kanan atas - hanya jika ada tiktok_post_id) -->
+      <!-- Social Media Badge (YouTube, Instagram, or TikTok) -->
       <button
-        v-if="product.tiktok_post_id"
+        v-if="socialMedia"
         type="button"
-        class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md sm:rounded-lg bg-slate-900/85 hover:bg-slate-900 text-white text-[10px] sm:text-xs font-semibold transition-all shadow-md backdrop-blur-xs"
-        title="Lihat konten TikTok produk ini"
-        @click.stop="showTikTok = true"
+        class="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 z-10 flex items-center gap-1 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md sm:rounded-lg text-white text-[10px] sm:text-xs font-semibold transition-all shadow-md backdrop-blur-xs hover:opacity-90 cursor-pointer"
+        :class="socialMedia.badgeBg"
+        :title="`Lihat konten ${socialMedia.label}`"
+        @click.stop="showSocialMedia = true"
       >
-        <svg class="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.69a8.19 8.19 0 004.78 1.52V6.76a4.85 4.85 0 01-1.02-.07z"/>
-        </svg>
-        <span class="leading-none">TikTok</span>
+        <span class="material-symbols-outlined text-xs sm:text-sm shrink-0 leading-none">{{ socialMedia.icon }}</span>
+        <span class="leading-none">{{ socialMedia.label }}</span>
       </button>
     </div>
     
@@ -101,17 +100,22 @@
           </a>
         </div>
 
-        <!-- TikTok Button (full width - hanya jika ada tiktok_post_id) -->
+        <!-- Social Media Button (YouTube / Instagram / TikTok) -->
         <button
-          v-if="product.tiktok_post_id"
+          v-if="socialMedia"
           type="button"
-          class="w-full flex items-center justify-center gap-1 sm:gap-1.5 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold text-slate-600 hover:text-white hover:bg-slate-900 border border-slate-200 hover:border-slate-900 transition-all whitespace-nowrap"
-          @click="showTikTok = true"
+          class="w-full flex items-center justify-center gap-1 sm:gap-1.5 py-1 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold border transition-all whitespace-nowrap cursor-pointer"
+          :class="[
+            socialMedia.platform === 'youtube'
+              ? 'border-red-200 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600'
+              : socialMedia.platform === 'instagram'
+                ? 'border-pink-200 text-pink-600 hover:bg-gradient-to-r hover:from-purple-500 hover:to-pink-500 hover:text-white hover:border-pink-500'
+                : 'border-slate-200 text-slate-700 hover:bg-slate-900 hover:text-white hover:border-slate-900'
+          ]"
+          @click="showSocialMedia = true"
         >
-          <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.69a8.19 8.19 0 004.78 1.52V6.76a4.85 4.85 0 01-1.02-.07z"/>
-          </svg>
-          <span class="leading-none">Lihat di TikTok</span>
+          <span class="material-symbols-outlined text-xs sm:text-sm shrink-0">{{ socialMedia.icon }}</span>
+          <span class="leading-none">Lihat di {{ socialMedia.label }}</span>
         </button>
 
         <!-- Quick View Link -->
@@ -126,19 +130,20 @@
     </div>
   </Card>
 
-  <!-- TikTok Player Modal -->
-  <MoleculesTikTokPlayerModal
-    v-if="product.tiktok_post_id"
-    :is-open="showTikTok"
-    :post-id="product.tiktok_post_id"
+  <!-- Universal Social Media Modal -->
+  <MoleculesSocialMediaModal
+    v-if="socialMedia"
+    :is-open="showSocialMedia"
+    :media-input="product.tiktok_post_id"
     :title="product.name"
-    @close="showTikTok = false"
+    @close="showSocialMedia = false"
   />
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import type { Product } from '~/types/product';
+import { parseSocialMedia } from '~/utils/socialEmbed';
 
 interface Props {
   product: Product;
@@ -152,7 +157,9 @@ defineEmits<{
 
 const { addToCart } = useOrderCart();
 const isAdded = ref(false);
-const showTikTok = ref(false);
+const showSocialMedia = ref(false);
+
+const socialMedia = computed(() => parseSocialMedia(props.product.tiktok_post_id));
 
 const handleAddToCart = () => {
   addToCart(props.product, 1, 'Karton');

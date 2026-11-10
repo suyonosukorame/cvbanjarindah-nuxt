@@ -49,8 +49,8 @@ export const adminResources: Record<string, AdminResource> = {
       { key: 'brand_id', label: 'Brand', type: 'relation', relationTable: 'brands', relationLabel: 'name' },
       { key: 'stock', label: 'Stok', type: 'number' },
       { key: 'is_featured', label: 'Produk unggulan', type: 'boolean' },
-      // Social media
-      { key: 'tiktok_post_id', label: 'TikTok Post ID', type: 'social-link', socialPlatform: 'tiktok', placeholder: 'Contoh: 7591783410276781332' },
+      // Social media / Video Embed
+      { key: 'tiktok_post_id', label: 'Video / Media Sosial Produk', type: 'social-link', socialPlatform: 'generic', placeholder: 'Tempel link YouTube (Shorts/Video), Instagram (Reel/Post), atau TikTok' },
     ],
   },
   categories: {

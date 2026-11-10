@@ -44,13 +44,13 @@
               <div
                 class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-start"
               >
-                <!-- Product Image Container -->
+                <!-- Product Image & Media Container -->
                 <div class="space-y-3">
-                  <!-- Tab switcher: Foto | TikTok -->
-                  <div v-if="product.tiktok_post_id" class="flex rounded-xl overflow-hidden border border-slate-200 text-xs font-semibold">
+                  <!-- Tab switcher: Foto | YouTube/Instagram/TikTok -->
+                  <div v-if="socialMedia" class="flex rounded-xl overflow-hidden border border-slate-200 text-xs font-semibold">
                     <button
                       type="button"
-                      class="flex-1 flex items-center justify-center gap-1.5 py-2 transition"
+                      class="flex-1 flex items-center justify-center gap-1.5 py-2 transition cursor-pointer"
                       :class="mediaTab === 'photo' ? 'bg-primary text-white' : 'bg-white text-slate-600 hover:bg-slate-50'"
                       @click="mediaTab = 'photo'"
                     >
@@ -59,14 +59,12 @@
                     </button>
                     <button
                       type="button"
-                      class="flex-1 flex items-center justify-center gap-1.5 py-2 transition"
-                      :class="mediaTab === 'tiktok' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 hover:bg-slate-50'"
-                      @click="mediaTab = 'tiktok'"
+                      class="flex-1 flex items-center justify-center gap-1.5 py-2 transition cursor-pointer"
+                      :class="mediaTab === 'media' ? (socialMedia.platform === 'youtube' ? 'bg-red-600 text-white' : socialMedia.platform === 'instagram' ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white' : 'bg-slate-900 text-white') : 'bg-white text-slate-600 hover:bg-slate-50'"
+                      @click="mediaTab = 'media'"
                     >
-                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.69a8.19 8.19 0 004.78 1.52V6.76a4.85 4.85 0 01-1.02-.07z"/>
-                      </svg>
-                      TikTok
+                      <span class="material-symbols-outlined text-sm leading-none" style="font-size:16px">{{ socialMedia.icon }}</span>
+                      {{ socialMedia.label }}
                     </button>
                   </div>
 
@@ -93,46 +91,68 @@
                     </div>
                   </div>
 
-                  <!-- TikTok Panel (lazy iframe - hanya di-mount saat tab aktif) -->
+                  <!-- Media Panel (YouTube / Instagram / TikTok) -->
                   <div
-                    v-if="product.tiktok_post_id"
-                    v-show="mediaTab === 'tiktok'"
+                    v-if="socialMedia"
+                    v-show="mediaTab === 'media'"
                     class="space-y-2"
                   >
                     <div
                       class="relative bg-slate-950 rounded-xl overflow-hidden border border-slate-800"
-                      style="padding-bottom: 177.78%;"
+                      :style="socialMedia.platform === 'youtube' ? 'padding-bottom: 56.25%;' : 'padding-bottom: 150%; min-height: 380px;'"
                     >
                       <div
-                        v-if="!tiktokLoaded && mediaTab === 'tiktok'"
-                        class="absolute inset-0 flex flex-col items-center justify-center text-white/60 text-xs gap-2"
+                        v-if="!mediaLoaded"
+                        class="absolute inset-0 flex flex-col items-center justify-center text-white/60 text-xs gap-2 z-10"
                       >
-                        <div class="w-6 h-6 border-2 border-white/20 border-t-[#fe2c55] rounded-full animate-spin" />
-                        <span>Memuat TikTok...</span>
+                        <div class="w-6 h-6 border-2 border-white/20 border-t-primary rounded-full animate-spin" />
+                        <span>Memuat konten {{ socialMedia.label }}...</span>
                       </div>
+
+                      <!-- YouTube Player -->
                       <iframe
-                        v-if="mediaTab === 'tiktok' && cleanTikTokId"
-                        :src="`https://www.tiktok.com/player/v1/${cleanTikTokId}?music_info=1&description=1&rel=0&autoplay=0`"
+                        v-if="mediaTab === 'media' && socialMedia.platform === 'youtube'"
+                        :src="socialMedia.embedUrl"
+                        class="absolute inset-0 w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        @load="mediaLoaded = true"
+                      />
+
+                      <!-- Instagram Player -->
+                      <iframe
+                        v-else-if="mediaTab === 'media' && socialMedia.platform === 'instagram'"
+                        :src="socialMedia.embedUrl"
+                        class="absolute inset-0 w-full h-full border-0 bg-white"
+                        allowtransparency="true"
+                        allowfullscreen="true"
+                        scrolling="no"
+                        @load="mediaLoaded = true"
+                      />
+
+                      <!-- TikTok Player -->
+                      <iframe
+                        v-else-if="mediaTab === 'media' && socialMedia.platform === 'tiktok'"
+                        :src="socialMedia.embedUrl"
                         class="absolute inset-0 w-full h-full border-0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerpolicy="no-referrer-when-downgrade"
                         allowfullscreen
                         scrolling="no"
-                        @load="tiktokLoaded = true"
+                        @load="mediaLoaded = true"
                       />
                     </div>
 
                     <!-- Direct Open Button in Quick View -->
                     <a
-                      :href="directTikTokUrl"
+                      :href="socialMedia.directUrl"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="w-full flex items-center justify-center gap-2 py-2 px-3 bg-gradient-to-r from-[#fe2c55] to-[#25f4ee] hover:opacity-95 text-white font-bold rounded-xl text-xs transition shadow-sm cursor-pointer"
+                      class="w-full flex items-center justify-center gap-2 py-2 px-3 bg-gradient-to-r text-white font-bold rounded-xl text-xs transition shadow-sm cursor-pointer hover:opacity-95"
+                      :class="socialMedia.gradientClass"
                     >
-                      <svg class="w-3.5 h-3.5 fill-white shrink-0" viewBox="0 0 24 24">
-                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05A6.34 6.34 0 003.15 15.3a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.69a8.19 8.19 0 004.78 1.52V6.76a4.85 4.85 0 01-1.02-.07z"/>
-                      </svg>
-                      <span>Putar Langsung di TikTok</span>
+                      <span class="material-symbols-outlined text-sm">{{ socialMedia.icon }}</span>
+                      <span>{{ socialMedia.actionText }}</span>
                       <span class="material-symbols-outlined text-xs">open_in_new</span>
                     </a>
                   </div>
@@ -276,9 +296,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import type { Product } from "~/types/product";
 import type { OrderUnit } from "~/types/cart";
+import { parseSocialMedia } from "~/utils/socialEmbed";
 
 interface Props {
   isOpen: boolean;
@@ -295,25 +316,15 @@ const { addToCart } = useOrderCart();
 const orderQuantity = ref(1);
 const orderUnit = ref<OrderUnit>("Karton");
 const isAdded = ref(false);
-const mediaTab = ref<'photo' | 'tiktok'>('photo');
-const tiktokLoaded = ref(false);
+const mediaTab = ref<'photo' | 'media'>('photo');
+const mediaLoaded = ref(false);
 
-// Reset tab & tiktokLoaded saat produk berganti
+const socialMedia = computed(() => parseSocialMedia(props.product?.tiktok_post_id));
+
+// Reset tab & mediaLoaded saat produk berganti
 watch(() => props.product, () => {
   mediaTab.value = 'photo';
-  tiktokLoaded.value = false;
-});
-
-const cleanTikTokId = computed(() => {
-  if (!props.product?.tiktok_post_id) return '';
-  const match = props.product.tiktok_post_id.match(/\d{15,25}/);
-  return match ? match[0] : props.product.tiktok_post_id.trim();
-});
-
-const directTikTokUrl = computed(() => {
-  if (!props.product?.tiktok_post_id) return 'https://www.tiktok.com/@cvbanjarindah';
-  if (props.product.tiktok_post_id.startsWith('http')) return props.product.tiktok_post_id;
-  return `https://www.tiktok.com/@cvbanjarindah/photo/${cleanTikTokId.value}`;
+  mediaLoaded.value = false;
 });
 
 const handleAddToCart = () => {
