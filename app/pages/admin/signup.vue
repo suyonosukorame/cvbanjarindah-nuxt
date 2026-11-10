@@ -211,15 +211,6 @@
               Masuk di sini
             </NuxtLink>
           </p>
-          <p class="text-xs text-slate-400">
-            Bukan staf CV Banjar Indah?
-            <NuxtLink
-              to="/"
-              class="text-primary hover:underline font-semibold ml-0.5"
-            >
-              Kembali ke Beranda
-            </NuxtLink>
-          </p>
         </div>
       </div>
     </section>
