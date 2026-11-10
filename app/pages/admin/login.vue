@@ -105,20 +105,12 @@
           {{ loading ? 'Memeriksa...' : 'Masuk' }}
         </button>
 
-        <div class="pt-2 border-t border-slate-100 space-y-2 text-center text-sm text-slate-600">
-          <p>
-            Belum punya akun admin?
-            <NuxtLink to="/admin/signup" class="font-bold text-primary hover:text-orange-700 ml-1">
-              Daftar di sini
-            </NuxtLink>
-          </p>
-          <p class="text-xs text-slate-400">
-            Bukan staf CV Banjar Indah? 
-            <NuxtLink to="/" class="text-primary hover:underline font-semibold ml-0.5">
-              Kembali ke Beranda
-            </NuxtLink>
-          </p>
-        </div>
+        <p class="pt-2 border-t border-slate-100 text-center text-sm text-slate-600">
+          Belum punya akun admin?
+          <NuxtLink to="/admin/signup" class="font-bold text-primary hover:text-orange-700 ml-1">
+            Daftar di sini
+          </NuxtLink>
+        </p>
       </form>
     </section>
   </main>
