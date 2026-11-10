@@ -38,14 +38,14 @@
         </div>
 
         <!-- Error Message -->
-        <div
+        <MoleculesAlert
           v-if="errorMessage"
-          role="alert"
-          class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2"
-        >
-          <span class="material-symbols-outlined text-red-600 text-lg shrink-0 mt-0.5">error</span>
-          <span>{{ errorMessage }}</span>
-        </div>
+          type="error"
+          variant="left-accent"
+          :description="errorMessage"
+          closeable
+          @close="errorMessage = ''"
+        />
 
         <label class="block space-y-2">
           <span class="text-sm font-semibold text-slate-700">Email</span>

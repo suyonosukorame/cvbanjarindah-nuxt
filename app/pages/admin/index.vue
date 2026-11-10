@@ -1,7 +1,15 @@
 <template>
   <section class="space-y-6">
     <div><p class="text-sm text-slate-500">Ikhtisar website</p><h2 class="mt-1 text-2xl font-bold text-slate-900">Ringkasan</h2></div>
-    <div v-if="errorMessage" role="alert" class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{{ errorMessage }}</div>
+    <MoleculesAlert
+      v-if="errorMessage"
+      type="warning"
+      variant="left-accent"
+      title="Pemberitahuan Sistem"
+      :description="errorMessage"
+      closeable
+      @close="errorMessage = ''"
+    />
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <article v-for="stat in stats" :key="stat.key" class="rounded-lg border border-slate-200 bg-white p-5">
         <div class="flex items-center justify-between"><span class="text-sm font-medium text-slate-500">{{ stat.label }}</span><span class="material-symbols-outlined text-xl text-primary">{{ stat.icon }}</span></div>

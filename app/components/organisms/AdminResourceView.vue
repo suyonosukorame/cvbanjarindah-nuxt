@@ -1,8 +1,12 @@
 <template>
   <section class="space-y-5">
-    <div v-if="!resource" class="rounded-lg border border-amber-200 bg-amber-50 p-5 text-sm text-amber-900">
-      Resource admin tidak dikenal.
-    </div>
+    <MoleculesAlert
+      v-if="!resource"
+      type="warning"
+      variant="left-accent"
+      title="Resource Tidak Dikenal"
+      description="Resource admin tidak ditemukan atau belum terdaftar dalam sistem."
+    />
     <template v-else>
       <!-- Page Header -->
       <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
@@ -50,13 +54,14 @@
       </div>
 
       <!-- Error Message -->
-      <div 
+      <MoleculesAlert 
         v-if="errorMessage" 
-        role="alert" 
-        class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-      >
-        {{ errorMessage }}
-      </div>
+        type="error"
+        variant="left-accent"
+        :description="errorMessage"
+        closeable
+        @close="errorMessage = ''"
+      />
 
       <div v-if="isFormView" class="rounded-lg border border-slate-200 bg-white p-4 sm:p-6">
         <form class="space-y-6" @submit.prevent="save">

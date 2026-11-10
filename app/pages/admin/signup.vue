@@ -30,14 +30,14 @@
         </div>
 
         <!-- Alert Error -->
-        <div
+        <MoleculesAlert
           v-if="errorMessage"
-          role="alert"
-          class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-start gap-2"
-        >
-          <span class="material-symbols-outlined text-red-600 text-lg shrink-0 mt-0.5">error</span>
-          <span>{{ errorMessage }}</span>
-        </div>
+          type="error"
+          variant="left-accent"
+          :description="errorMessage"
+          closeable
+          @close="errorMessage = ''"
+        />
 
         <!-- Form -->
         <form class="space-y-4" @submit.prevent="handleSignUp">

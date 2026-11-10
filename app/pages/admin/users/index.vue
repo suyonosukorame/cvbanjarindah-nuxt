@@ -57,13 +57,17 @@
     <MoleculesAlert
       v-if="successMessage"
       type="success"
+      variant="left-accent"
       :message="successMessage"
+      closeable
       @close="successMessage = ''"
     />
     <MoleculesAlert
       v-if="errorMessage"
       type="error"
+      variant="left-accent"
       :message="errorMessage"
+      closeable
       @close="errorMessage = ''"
     />
 
@@ -129,20 +133,15 @@
       />
 
       <!-- Debug Panel: tampil hanya jika ada fetchError -->
-      <div v-if="fetchError" class="rounded-xl border border-amber-200 bg-amber-50 p-5 text-sm space-y-2">
-        <div class="flex items-center gap-2 font-bold text-amber-800">
-          <span class="material-symbols-outlined text-lg">warning</span>
-          Info Debug (hanya terlihat oleh Admin)
-        </div>
-        <p class="text-amber-700">
-          Tabel <code class="bg-amber-100 px-1 rounded text-xs font-mono">admin_users</code> kosong atau RLS memblokir query.
-          Jalankan SQL migration <code class="bg-amber-100 px-1 rounded text-xs font-mono">fix_admin_users_schema.sql</code> di Supabase SQL Editor.
-        </p>
-        <details class="text-xs text-amber-600">
-          <summary class="cursor-pointer font-semibold hover:text-amber-800">Detail error teknis</summary>
-          <pre class="mt-2 bg-amber-100 rounded p-2 overflow-x-auto whitespace-pre-wrap">{{ fetchError }}</pre>
-        </details>
-      </div>
+      <MoleculesAlert
+        v-if="fetchError"
+        type="warning"
+        variant="card"
+        title="Info Debug (Hanya terlihat oleh Admin)"
+        description="Tabel admin_users kosong atau RLS memblokir query. Jalankan SQL migration fix_admin_users_schema.sql di Supabase SQL Editor jika diperlukan."
+        :details="fetchError"
+        details-title="Lihat detail error teknis"
+      />
     </div>
 
     <!-- Approve User Modal -->
