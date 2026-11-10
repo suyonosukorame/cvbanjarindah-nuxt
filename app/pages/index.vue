@@ -21,15 +21,7 @@
         title="Produk Kami"
         subtitle="Berbagai kategori produk berkualitas untuk kebutuhan toko Anda"
         :products="products"
-        :categories="[
-          'Semua',
-          'Kesehatan',
-          'Kosmetik',
-          'Bayi',
-          'Garment',
-          'Elektronik',
-          'Kelontongan',
-        ]"
+        :categories="categoriesList"
       />
     </section>
 
@@ -171,6 +163,15 @@ definePageMeta({
 // Fetch dynamic data from Supabase
 const { supabase } = useSupabase();
 const products = ref<Product[]>(staticProducts.slice(0, 6));
+const categoriesList = ref<string[]>([
+  "Semua",
+  "Kesehatan",
+  "Kosmetik & Kecantikan",
+  "Bayi",
+  "Garment",
+  "Elektronik",
+  "Kelontongan",
+]);
 const companyStats = ref(staticCompanyStats);
 const testimonials = ref(staticTestimonials);
 const pricingPackages = ref(staticPricingPackages);
@@ -180,27 +181,48 @@ onMounted(async () => {
   try {
     loading.value = true;
 
-    // Fetch products (active only, featured first)
-    const { data: productsData } = await supabase
-      .from("products")
-      .select("*")
-      .eq("status", "active")
-      .order("is_featured", { ascending: false })
-      .order("created_at", { ascending: false })
-      .limit(6);
+    // Fetch products, categories, and brands in parallel
+    const [productsResult, categoriesResult, brandsResult] = await Promise.all([
+      supabase
+        .from("products")
+        .select("*")
+        .eq("status", "active")
+        .order("is_featured", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("categories")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("brands")
+        .select("id, name")
+        .eq("is_active", true),
+    ]);
 
-    if (productsData) {
-      products.value = productsData.map((item: any) => ({
+    const catMap = new Map((categoriesResult.data || []).map((c: any) => [c.id, c.name]));
+    const brandMap = new Map((brandsResult.data || []).map((b: any) => [b.id, b.name]));
+
+    if (categoriesResult.data && categoriesResult.data.length > 0) {
+      categoriesList.value = ["Semua", ...categoriesResult.data.map((c: any) => c.name)];
+    }
+
+    if (productsResult.data && productsResult.data.length > 0) {
+      products.value = productsResult.data.map((item: any) => ({
         id: item.id,
         name: item.name,
         description: item.description || "",
-        category: "Produk", // Simplified for homepage
+        category: catMap.get(item.category_id) || "Produk",
+        brand: brandMap.get(item.brand_id) || undefined,
+        brandId: item.brand_id,
         image:
           item.image_url ||
           "https://images.unsplash.com/photo-1584556326561-c8746083993b?w=400&h=300&fit=crop",
         featured: item.is_featured || false,
         price: item.price,
         stock: item.stock,
+        tiktok_post_id: item.tiktok_post_id || null,
       }));
     }
 
