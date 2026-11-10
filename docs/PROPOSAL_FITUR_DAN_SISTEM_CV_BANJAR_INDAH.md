@@ -59,7 +59,7 @@ Sistem dirancang dengan pendekatan *Mobile-First*, ringan, hemat kuota internet,
 
 6. **Spesifikasi Jangkauan Distribusi Terfokus (Kalsel-Teng)**
    - Informasi rute armada pengiriman truk sendiri untuk wilayah Kalimantan Selatan (Banjarmasin, Banjarbaru, Martapura, Kandangan, Barabai, Amuntai, Tanjung, Kotabaru, Pelaihari, Marabahan).
-   - Fasilitas drop ke ekspedisi/pelabuhan untuk wilayah Kalimantan Tengah (Palangka Raya, Sampit, Pangkalan Bun, Muara Teweh, Kuala Kapuas, Pulang Pisau).
+   - Fasilitas drop ke ekspedisi untuk wilayah Kalimantan Tengah (Palangka Raya, Sampit, Pangkalan Bun, Muara Teweh, Kuala Kapuas, Pulang Pisau).
 
 7. **Transparansi Paket Kemitraan Toko**
    - Penjelasan paket *Starter*, *Business*, dan *Enterprise* dengan detail minimum order, tier harga grosir, dan dukungan materi promosi.
@@ -133,3 +133,4 @@ Mohon kesediaan Bapak/Ibu untuk memberikan evaluasi akhir sebelum dipublikasikan
 ---
 
 *Dokumen ini disimpan sebagai arsip resmi arsitektur sistem dan bahan proposal pengembangan bisnis digital CV Banjar Indah.*
+

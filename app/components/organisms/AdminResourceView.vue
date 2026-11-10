@@ -11,7 +11,16 @@
       <!-- Page Header -->
       <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p class="text-sm text-slate-500">Konten website</p>
+          <div class="flex items-center gap-2">
+            <p class="text-sm text-slate-500">Konten website</p>
+            <span
+              v-if="props.resourceKey === 'inquiries' && isSuperAdmin"
+              class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-purple-100 text-purple-700 border border-purple-200"
+            >
+              <span class="material-symbols-outlined text-xs">shield_person</span>
+              Super Admin (CRUD Penuh)
+            </span>
+          </div>
           <h2 class="mt-1 text-2xl font-bold text-slate-900">
             {{ 
               isCreate 
@@ -27,7 +36,7 @@
         </div>
 
         <!-- Search & Add Button (List View) -->
-        <div v-if="!isFormView && resource.allowCreate !== false" class="flex gap-2">
+        <div v-if="!isFormView && canCreate" class="flex gap-2">
           <input 
             v-model="search" 
             type="search" 
@@ -43,7 +52,7 @@
           </NuxtLink>
         </div>
 
-        <!-- Search Only (Form View) -->
+        <!-- Search Only (List View when cannot create) -->
         <input 
           v-else-if="!isFormView" 
           v-model="search" 
@@ -248,7 +257,16 @@
         </form>
       </div>
 
-      <div v-else class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div v-else class="space-y-4">
+        <!-- Status Tabs Filter (Khusus Pesan Masuk / Inquiries) -->
+        <div v-if="props.resourceKey === 'inquiries'" class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
+          <MoleculesStatusFilterTabs
+            v-model="statusFilter"
+            :tabs="inquiryStatusTabs"
+          />
+        </div>
+
+        <div class="overflow-hidden rounded-lg border border-slate-200 bg-white">
         <!-- Loading State -->
         <div v-if="loading" class="flex h-48 items-center justify-center gap-3 text-sm text-slate-500">
           <span class="material-symbols-outlined animate-spin">progress_activity</span>
@@ -301,6 +319,12 @@
                     :item-name="row.name || row.customer_name || row.customer_company || 'Item'"
                   />
                   
+                  <!-- Status Badge Field -->
+                  <AtomsStatusBadge 
+                    v-else-if="field.key === 'status'"
+                    :status="String(row[field.key])"
+                  />
+
                   <!-- Boolean Field -->
                   <span 
                     v-else-if="field.type === 'boolean'"
@@ -323,14 +347,14 @@
                     :aria-label="`Edit ${resource.label}`"
                   >
                     <span class="material-symbols-outlined text-lg">
-                      {{ resource.allowCreate === false ? 'visibility' : 'edit' }}
+                      {{ (resource.allowCreate === false && !canCreate) ? 'visibility' : 'edit' }}
                     </span>
                   </NuxtLink>
                   <button 
-                    v-if="resource.allowDelete !== false" 
-                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600" 
+                    v-if="canDelete" 
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 cursor-pointer" 
                     :aria-label="`Hapus ${resource.label}`" 
-                    @click="removeRow(row)"
+                    @click="confirmDelete(row)"
                   >
                     <span class="material-symbols-outlined text-lg">delete</span>
                   </button>
@@ -365,6 +389,21 @@
           </div>
         </footer>
       </div>
+      </div>
+    </template>
+
+    <!-- Confirm Delete Dialog -->
+    <MoleculesConfirmDialog
+      :visible="showDeleteDialog"
+      type="danger"
+      :title="`Hapus ${resource?.label || 'Data'}?`"
+      :message="`Data '${deleteTarget?.name || deleteTarget?.company || deleteTarget?.customer_name || 'ini'}' akan dihapus secara permanen.`"
+      confirm-label="Ya, Hapus"
+      cancel-label="Batal"
+      :loading="deleting"
+      @confirm="executeDelete"
+      @cancel="showDeleteDialog = false"
+    />
     </template>
   </section>
 </template>
@@ -372,6 +411,7 @@
 <script setup lang="ts">
 import { adminResources, type AdminField } from '~/utils/adminResources';
 import { parseSocialMedia } from '~/utils/socialEmbed';
+import { useAuth } from '~/composables/useAuth';
 
 const parsedSocial = (val: any) => parseSocialMedia(val);
 
@@ -380,6 +420,13 @@ const route = useRoute();
 const router = useRouter();
 const { $supabase } = useNuxtApp();
 const toast = useToast();
+const { user, userRole, checkAuth } = useAuth();
+const isSuperAdmin = computed(() => userRole.value === 'super_admin');
+
+onMounted(async () => {
+  await checkAuth();
+});
+
 const resource = computed(() => adminResources[props.resourceKey]);
 const basePath = computed(() => `/admin/${props.resourceKey}`);
 const recordId = computed(() => typeof route.params.id === 'string' ? route.params.id : '');
@@ -395,20 +442,71 @@ const errorMessage = ref('');
 const currentPage = ref(1);
 const perPage = 10;
 
+// Dynamic permissions for Super Admin vs Regular Admin
+const canCreate = computed(() => {
+  if (!resource.value) return false;
+  if (props.resourceKey === 'inquiries') {
+    return isSuperAdmin.value;
+  }
+  return resource.value.allowCreate !== false;
+});
+
+const canDelete = computed(() => {
+  if (!resource.value) return false;
+  if (props.resourceKey === 'inquiries') {
+    return isSuperAdmin.value;
+  }
+  return resource.value.allowDelete !== false;
+});
+
+// Status tabs filter state
+const statusFilter = ref('all');
+
+const inquiryStatusTabs = computed(() => {
+  if (props.resourceKey !== 'inquiries') return [];
+  const counts: Record<string, number> = {
+    all: rows.value.length,
+    new: 0,
+    contacted: 0,
+    converted: 0,
+    archived: 0,
+  };
+  for (const r of rows.value) {
+    if (r.status && counts[r.status] !== undefined) {
+      counts[r.status]++;
+    }
+  }
+  return [
+    { value: 'all', label: 'Semua', count: counts.all, icon: 'inbox' },
+    { value: 'new', label: 'Baru', count: counts.new, icon: 'mark_email_unread' },
+    { value: 'contacted', label: 'Dihubungi', count: counts.contacted, icon: 'call' },
+    { value: 'converted', label: 'Dikonversi', count: counts.converted, icon: 'verified' },
+    { value: 'archived', label: 'Diarsipkan', count: counts.archived, icon: 'archive' },
+  ];
+});
+
 // Relation dropdown state
 const relationOptions = ref<Record<string, Array<{ label: string; value: string }>>>({});
 const relationLoading = ref<Record<string, boolean>>({});
 
 const visibleFields = computed(() => (resource.value?.fields ?? []).slice(0, 4));
 const filteredRows = computed(() => {
+  let list = rows.value;
+  if (props.resourceKey === 'inquiries' && statusFilter.value !== 'all') {
+    list = list.filter(row => row.status === statusFilter.value);
+  }
   const query = search.value.trim().toLocaleLowerCase();
-  if (!query || !resource.value) return rows.value;
-  return rows.value.filter(row => resource.value!.searchable.some(key => String(row[key] ?? '').toLocaleLowerCase().includes(query)));
+  if (!query || !resource.value) return list;
+  return list.filter(row => resource.value!.searchable.some(key => String(row[key] ?? '').toLocaleLowerCase().includes(query)));
 });
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredRows.value.length / perPage)));
 const pageRows = computed(() => filteredRows.value.slice((currentPage.value - 1) * perPage, currentPage.value * perPage));
 
-const isInquiryReadOnly = (key: string) => props.resourceKey === 'inquiries' && key !== 'status';
+const isInquiryReadOnly = (key: string) => {
+  if (props.resourceKey !== 'inquiries') return false;
+  if (isSuperAdmin.value) return false;
+  return key !== 'status';
+};
 const displayValue = (value: unknown, field: AdminField) => {
   if (field.type === 'boolean') return value ? 'Aktif' : 'Nonaktif';
   if (value === null || value === undefined || value === '') return '-';
@@ -583,6 +681,10 @@ const save = async () => {
     }
 
     if (isCreate.value) {
+      if (props.resourceKey === 'inquiries') {
+        payload.source = 'admin_manual';
+        if (!payload.status) payload.status = 'new';
+      }
       const { error } = await $supabase.from(resource.value.table).insert(payload);
       if (error) throw error;
       toast.success(`${resource.value.label} berhasil ditambahkan`);
@@ -590,8 +692,8 @@ const save = async () => {
       // For update, only include fields that are defined in the resource config
       const updatePayload: Record<string, unknown> = {};
       for (const field of resource.value.fields) {
-        if (props.resourceKey === 'inquiries' && field.key !== 'status') {
-          // Skip non-status fields for inquiries (read-only)
+        if (props.resourceKey === 'inquiries' && !isSuperAdmin.value && field.key !== 'status') {
+          // Skip non-status fields for inquiries (read-only for non-superadmin)
           continue;
         }
         updatePayload[field.key] = payload[field.key];
@@ -647,17 +749,37 @@ const uploadImage = async (field: AdminField, file: File) => {
   }
 };
 
-const removeRow = async (row: Record<string, any>) => {
-  if (!$supabase || !resource.value || !window.confirm(`Hapus data ${String(row.name ?? row.customer_name ?? '')}?`)) return;
+// Modal Delete state & actions
+const showDeleteDialog = ref(false);
+const deleteTarget = ref<Record<string, any> | null>(null);
+const deleting = ref(false);
+
+const confirmDelete = (row: Record<string, any>) => {
+  deleteTarget.value = row;
+  showDeleteDialog.value = true;
+};
+
+const executeDelete = async () => {
+  if (!$supabase || !resource.value || !deleteTarget.value) return;
+  deleting.value = true;
   errorMessage.value = '';
-  const { error } = await $supabase.from(resource.value.table).delete().eq('id', row.id);
-  if (error) {
-    errorMessage.value = error.message;
-    toast.error(`Gagal menghapus ${resource.value.label.toLowerCase()}: ${error.message}`);
-  } else {
-    rows.value = rows.value.filter(item => item.id !== row.id);
+  try {
+    const { error } = await $supabase.from(resource.value.table).delete().eq('id', deleteTarget.value.id);
+    if (error) throw error;
+    rows.value = rows.value.filter(item => item.id !== deleteTarget.value!.id);
     toast.success(`${resource.value.label} berhasil dihapus`);
+    showDeleteDialog.value = false;
+    deleteTarget.value = null;
+  } catch (err: any) {
+    errorMessage.value = err.message || 'Gagal menghapus data';
+    toast.error(`Gagal menghapus ${resource.value.label.toLowerCase()}: ${err.message}`);
+  } finally {
+    deleting.value = false;
   }
+};
+
+const removeRow = async (row: Record<string, any>) => {
+  confirmDelete(row);
 };
 
 // Auto-generate slug secara real-time saat field sumber (autoFrom) berubah
@@ -679,8 +801,10 @@ watch(
 watch(() => [props.resourceKey, recordId.value], () => {
   currentPage.value = 1;
   search.value = '';
+  statusFilter.value = 'all';
   resetForm();
   void load();
 }, { immediate: true });
+watch(statusFilter, () => { currentPage.value = 1; });
 watch(search, () => { currentPage.value = 1; });
 </script>
